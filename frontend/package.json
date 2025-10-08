@@ -1,0 +1,32 @@
+{
+  "name": "mini-amazon-vue",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:web": "vite",
+
+    "dev:api:win": "cmd /c \"cd ..\\backend && py -m uvicorn main:app --reload --port 8000\"",
+    "dev:api:unix": "cd ../backend && .venv/bin/python -m uvicorn main:app --reload --port 8000",
+
+    "dev:full:win":  "concurrently -k -n API,WEB \"npm:dev:api:win\"  \"npm:dev:web\"",
+    "dev:full:unix": "concurrently -k -n API,WEB \"npm:dev:api:unix\" \"npm:dev:web\"",
+
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.5.22",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "vite": "^7.1.7",
+    "vite-plugin-vue-devtools": "^8.0.2"
+  }
+}
