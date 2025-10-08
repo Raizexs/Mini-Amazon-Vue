@@ -26,15 +26,38 @@ const mapML = r => ({
   thumbnail: (r.thumbnail || '').replace(/^http:/,'https:'),
   permalink: r.permalink
 })
+// Tasa USD -> CLP configurable via Vite env variable
+const USD_TO_CLP = Number(import.meta.env.VITE_USD_TO_CLP_RATE || 1000) || 1000
+const toCLP = (val, cur) => {
+  if (!val) return 0
+  try {
+    // si la moneda ya es CLP o la tasa es 1, devolver tal cual
+    if (!cur || String(cur).toUpperCase() === 'CLP') return Number(val)
+    if (String(cur).toUpperCase() === 'USD') return Math.round(Number(val) * USD_TO_CLP)
+    // por defecto intentar devolver el valor numérico
+    return Number(val)
+  } catch { return Number(val) }
+}
+
 const mapDummy = p => ({
   source:'Dummy',
-  id:p.id, title:p.title, price:p.price, currency:'USD',
-  thumbnail:p.thumbnail, permalink:`https://dummyjson.com/products/${p.id}`
+  id:p.id,
+  title:p.title,
+  // Dummy devuelve precios en USD: convertir a CLP usando tasa configurable
+  price: toCLP(p.price, 'USD'),
+  currency: 'CLP',
+  thumbnail:p.thumbnail,
+  permalink:`https://dummyjson.com/products/${p.id}`
 })
 const mapFake = p => ({
   source:'FakeStore',
-  id:p.id, title:p.title, price:p.price, currency:'USD',
-  thumbnail:p.image, permalink:`https://fakestoreapi.com/products/${p.id}`
+  id:p.id,
+  title:p.title,
+  // FakeStore usa USD: convertir a CLP
+  price: toCLP(p.price, 'USD'),
+  currency: 'CLP',
+  thumbnail:p.image,
+  permalink:`https://fakestoreapi.com/products/${p.id}`
 })
 
 // -------- sanitizar/valores ----------
