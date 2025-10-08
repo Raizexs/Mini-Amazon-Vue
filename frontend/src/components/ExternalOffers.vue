@@ -36,7 +36,12 @@
               <div class="col-9 p-2">
                 <div class="small text-truncate" :title="it.title">{{ it.title }}</div>
                 <div class="fw-semibold">{{ fmtPrice(it.price, it.currency) }}</div>
-                <span class="badge bg-secondary-subtle text-secondary-emphasis small">{{ it.source }}</span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-secondary-subtle text-secondary-emphasis small d-inline-flex align-items-center">
+                    <img v-if="it.mlMatched || it.source === 'Mercado Libre'" src="/img/ml-logo.svg.png" alt="ML" class="ml-logo me-1"/>
+                    {{ it.source }}
+                  </span>
+                </div>
               </div>
             </div>
           </a>
@@ -92,4 +97,5 @@ watch(qList, () => { clearTimeout(t); t = setTimeout(load, props.debounceMs) })
 
 <style scoped>
 .text-truncate{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ml-logo{ width:18px; height:auto; }
 </style>
