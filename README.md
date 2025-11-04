@@ -177,17 +177,16 @@ Mini-Amazon-Vue/
 
 Este proyecto fue desarrollado como sistema completo de e-commerce siguiendo las mejores prácticas de desarrollo web moderno. La arquitectura permite escalabilidad y mantenimiento sencillo, con separación clara entre frontend y backend.
 
-**� Características de Seguridad:**
+**🀽  Características de Seguridad:**
 
 - Autenticación JWT completa
 - Protección de rutas en frontend
 - Persistencia segura de sesión
 - Validación en múltiples capas
 
-**🀽� Documentación adicional:**
+**🀽  Documentación adicional:**
 
-- **Setup rápido de autenticación:** `docs/AUTH_QUICK_START.md`
-- **Guía completa de integración:** `docs/AUTH_INTEGRATION.md`
+- **Setup rápido de autenticación:** `docs/QUICK_START.md`
 - **Documentación del backend:** `docs/BACKEND_DOCUMENTATION.md`
 
 ---
