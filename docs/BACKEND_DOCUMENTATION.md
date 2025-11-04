@@ -36,7 +36,7 @@ Mini-Amazon Backend es una API REST desarrollada con **FastAPI** que proporciona
 - **Autenticación**: JWT (python-jose)
 - **Encriptación**: bcrypt (passlib)
 - **Servidor**: Uvicorn
-- **Containerización**: Docker & Docker Compose
+- **Containerización**: Docker & Docker Compose 
 
 ---
 

@@ -30,23 +30,23 @@ Una aplicación de comercio electrónico completa con backend FastAPI y frontend
 
 ### 🎨 Frontend
 
-| Tecnología     | Versión | Descripción                              |
-| -------------- | ------- | ---------------------------------------- |
-| **Vue 3**      | 3.x     | Framework progresivo con Composition API |
-| **Vite**       | 5.x     | Build tool ultra-rápido                  |
-| **Vue Router** | 4.x     | Enrutamiento SPA                         |
-| **CSS3**       | -       | Estilos personalizados                   |
+| Tecnología          | Versión | Descripción                             |
+| -------------------- | -------- | ---------------------------------------- |
+| **Vue 3**      | 3.x      | Framework progresivo con Composition API |
+| **Vite**       | 5.x      | Build tool ultra-rápido                 |
+| **Vue Router** | 4.x      | Enrutamiento SPA                         |
+| **CSS3**       | -        | Estilos personalizados                   |
 
 ### ⚙️ Backend
 
-| Tecnología     | Versión | Descripción                    |
-| -------------- | ------- | ------------------------------ |
-| **FastAPI**    | 0.104+  | Framework web moderno y rápido |
-| **PostgreSQL** | 15      | Base de datos relacional       |
-| **SQLAlchemy** | 2.x     | ORM Python                     |
-| **Alembic**    | 1.x     | Gestor de migraciones          |
-| **JWT**        | -       | Autenticación segura           |
-| **bcrypt**     | -       | Encriptación de contraseñas    |
+| Tecnología          | Versión | Descripción                    |
+| -------------------- | -------- | ------------------------------- |
+| **FastAPI**    | 0.104+   | Framework web moderno y rápido |
+| **PostgreSQL** | 15       | Base de datos relacional        |
+| **SQLAlchemy** | 2.x      | ORM Python                      |
+| **Alembic**    | 1.x      | Gestor de migraciones           |
+| **JWT**        | -        | Autenticación segura           |
+| **bcrypt**     | -        | Encriptación de contraseñas   |
 
 ### 🐳 DevOps
 
@@ -121,11 +121,11 @@ npm run dev
 
 Una vez iniciados los servicios:
 
-| Servicio             | URL                        | Descripción               |
-| -------------------- | -------------------------- | ------------------------- |
-| 🎨 **Frontend**      | http://localhost:5173      | Interfaz de usuario Vue 3 |
-| ⚙️ **Backend API**   | http://localhost:8000      | API REST FastAPI          |
-| 📖 **Documentación** | http://localhost:8000/docs | Swagger UI interactiva    |
+| Servicio                   | URL                        | Descripción              |
+| -------------------------- | -------------------------- | ------------------------- |
+| 🎨**Frontend**       | http://localhost:5173      | Interfaz de usuario Vue 3 |
+| ⚙️**Backend API**  | http://localhost:8000      | API REST FastAPI          |
+| 📖**Documentación** | http://localhost:8000/docs | Swagger UI interactiva    |
 
 ---
 
@@ -156,13 +156,13 @@ Mini-Amazon-Vue/
 
 ## 🔒 Validaciones y Seguridad
 
-| Característica           | Implementación                |
-| ------------------------ | ----------------------------- |
-| 🔐 **Contraseñas**       | Encriptación con bcrypt       |
-| 🎫 **Autenticación**     | Tokens JWT seguros            |
-| ✅ **Validación**        | Frontend + Backend (Pydantic) |
-| 🌐 **CORS**              | Configurado para desarrollo   |
-| 🛡️ **Manejo de errores** | Respuestas estandarizadas     |
+| Característica                 | Implementación               |
+| ------------------------------- | ----------------------------- |
+| 🔐**Contraseñas**        | Encriptación con bcrypt      |
+| 🎫**Autenticación**      | Tokens JWT seguros            |
+| ✅**Validación**         | Frontend + Backend (Pydantic) |
+| 🌐**CORS**                | Configurado para desarrollo   |
+| 🛡️**Manejo de errores** | Respuestas estandarizadas     |
 
 ---
 
@@ -170,7 +170,7 @@ Mini-Amazon-Vue/
 
 Este proyecto fue desarrollado como sistema completo de e-commerce siguiendo las mejores prácticas de desarrollo web moderno. La arquitectura permite escalabilidad y mantenimiento sencillo, con separación clara entre frontend y backend.
 
-**📚 Documentación adicional:** Para detalles técnicos avanzados, consultar la carpeta `docs/`.
+**📚 Documentación adicional:** Para detalles técnicos avanzados, consultar la carpeta `docs/`. 
 
 ---
 
