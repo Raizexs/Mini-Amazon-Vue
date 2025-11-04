@@ -59,12 +59,13 @@ Una aplicación de comercio electrónico completa con backend FastAPI y frontend
 - 🛍️ **Catálogo dinámico** - Filtrado por categorías y búsqueda en tiempo real
 - 📦 **Detalle de producto** - Sistema de reseñas y calificaciones
 - 🛒 **Carrito de compras** - Persistente con actualización automática
-- ⭐ **Sistema de favoritos** - Guarda productos para después
+- ⭐ **Sistema de favoritos** - Guarda productos para después (requiere login)
 - 💳 **Checkout completo** - Validación de cupones y cálculo de envío
-- 📋 **Historial de pedidos** - Seguimiento detallado de compras
+- 📋 **Historial de pedidos** - Seguimiento detallado de compras (requiere login)
 - 🔗 **Integración externa** - API de Mercado Libre con ofertas reales
 - 🌓 **Tema claro/oscuro** - Cambio dinámico de interfaz
-- 🔐 **Autenticación segura** - Registro, login y sesión persistente
+- 🔐 **Autenticación completa** - Registro, login, JWT y protección de rutas
+- 👤 **Gestión de usuarios** - Perfil, actualización de datos y logout
 
 ---
 
@@ -80,6 +81,9 @@ cd Mini-Amazon-Vue
 # 2️⃣ Configurar variables de entorno
 cp backend/.env.example backend/.env
 # 📝 Editar backend/.env y cambiar SECRET_KEY
+
+cp frontend/.env.example frontend/.env
+# 📝 Editar frontend/.env y configurar VITE_API_BASE=http://localhost:8000
 
 # 3️⃣ Iniciar servicios con Docker Compose
 docker-compose up -d
@@ -135,10 +139,11 @@ Una vez iniciados los servicios:
 Mini-Amazon-Vue/
 ├── 🎨 frontend/              # Aplicación Vue 3
 │   ├── src/
-│   │   ├── pages/           # Vistas principales (Home, Catálogo, Producto, etc.)
+│   │   ├── pages/           # Vistas principales (Home, Catálogo, Login, etc.)
 │   │   ├── components/      # Componentes reutilizables
-│   │   ├── router/          # Configuración de rutas
-│   │   └── services/        # Servicios API (Mercado Libre)
+│   │   ├── router/          # Configuración de rutas y guards
+│   │   ├── stores/          # Estado global (autenticación)
+│   │   └── services/        # Servicios API (backend y Mercado Libre)
 │   └── public/
 │       └── data/            # Datos JSON locales (productos, categorías, etc.)
 │
@@ -149,6 +154,8 @@ Mini-Amazon-Vue/
 │   └── alembic/             # Sistema de migraciones
 │
 ├── 📚 docs/                  # Documentación técnica completa
+│   ├── BACKEND_DOCUMENTATION.md  # Guía completa de autenticación
+│   └── QUICK_START.md  # Guía rápida de setup
 └── 🐳 docker-compose.yml     # Orquestación de servicios
 ```
 
@@ -170,7 +177,18 @@ Mini-Amazon-Vue/
 
 Este proyecto fue desarrollado como sistema completo de e-commerce siguiendo las mejores prácticas de desarrollo web moderno. La arquitectura permite escalabilidad y mantenimiento sencillo, con separación clara entre frontend y backend.
 
-**📚 Documentación adicional:** Para detalles técnicos avanzados, consultar la carpeta `docs/`. 
+**� Características de Seguridad:**
+
+- Autenticación JWT completa
+- Protección de rutas en frontend
+- Persistencia segura de sesión
+- Validación en múltiples capas
+
+**🀽� Documentación adicional:**
+
+- **Setup rápido de autenticación:** `docs/AUTH_QUICK_START.md`
+- **Guía completa de integración:** `docs/AUTH_INTEGRATION.md`
+- **Documentación del backend:** `docs/BACKEND_DOCUMENTATION.md`
 
 ---
 

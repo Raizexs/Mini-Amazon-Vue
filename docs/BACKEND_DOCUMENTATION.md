@@ -1,326 +1,212 @@
-# Mini-Amazon Backend - Documentación Técnica
+# 📘 Documentación Backend - Mini Amazon Vue
 
-## Índice
+## Resumen Ejecutivo
 
-1. [Introducción](#introducción)
-2. [Arquitectura del Sistema](#arquitectura-del-sistema)
-3. [Modelo de Datos](#modelo-de-datos)
-4. [Seguridad y Autenticación](#seguridad-y-autenticación)
-5. [API Endpoints](#api-endpoints)
-6. [Instalación y Despliegue](#instalación-y-despliegue)
-7. [Uso de la API](#uso-de-la-api)
-8. [Migraciones de Base de Datos](#migraciones-de-base-de-datos)
+Backend profesional para e-commerce desarrollado con **FastAPI** que implementa:
+
+- 🔐 **Autenticación JWT** con tokens seguros
+- 🔒 **Encriptación de contraseñas con bcrypt**
+- 📊 Base de datos relacional con **PostgreSQL**
+- 🚀 API REST con 25+ endpoints documentados
 
 ---
 
-## Introducción
+## 🔐 Seguridad - La Prioridad #1
 
-Mini-Amazon Backend es una API REST desarrollada con **FastAPI** que proporciona funcionalidad completa de e-commerce, incluyendo autenticación de usuarios, gestión de productos, carrito de compras, procesamiento de órdenes y sistema de reviews.
+### Autenticación JWT (JSON Web Tokens)
 
-### Características Principales
+**¿Qué es JWT?**
 
-- ✅ **Autenticación JWT** con tokens seguros
-- ✅ **Encriptación de contraseñas** con bcrypt
-- ✅ **Base de datos relacional** con PostgreSQL
-- ✅ **Migraciones automáticas** con Alembic
-- ✅ **Documentación interactiva** con Swagger UI
-- ✅ **Dockerización completa** con Docker Compose
-- ✅ **CORS configurado** para integración con frontend
+- Sistema de autenticación **stateless** (sin sesiones en servidor)
+- Token firmado criptográficamente
+- Incluye información del usuario encriptada
+- Imposible de falsificar sin la clave secreta
+
+**Características de nuestra implementación:**
+
+```python
+SECRET_KEY: Clave secreta de 32+ caracteres (configurable)
+ALGORITHM: HS256 (HMAC con SHA-256)
+EXPIRATION: 30 minutos
+```
+
+**Flujo de Autenticación:**
+
+```
+1. Usuario → Login (email + password)
+2. Backend → Valida con bcrypt
+3. Backend → Genera token JWT firmado
+4. Cliente → Guarda token
+5. Cliente → Envía token en cada request: Authorization: Bearer <token>
+6. Backend → Valida firma del token
+7. Backend → Permite/Deniega acceso
+```
+
+**Ejemplo de Token:**
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwiZXhwIjoxNzAwMDAwMDAwfQ.signature
+```
+
+### Encriptación de Contraseñas con bcrypt
+
+**¿Por qué bcrypt?**
+
+- ✅ **Imposible de revertir** - Es un hash unidireccional
+- ✅ **Resistente a ataques** - Incluso con supercomputadoras
+- ✅ **Salt automático** - Cada contraseña tiene un salt único
+- ✅ **Configurable** - 12 rounds por defecto (muy seguro)
+
+**Cómo funciona:**
+
+```python
+# Usuario registra con: "mipassword123"
+# bcrypt genera:
+"$2b$12$LQVz9kR5eF7xHa8KpYt5K.A7x8ZHq2Nv3Ij4mK8pL6nM9oP0qR1sT"
+
+# Partes del hash:
+$2b       → Algoritmo bcrypt versión 2b
+$12       → 12 rounds (2^12 = 4096 iteraciones)
+LQVz9...  → Salt generado aleatoriamente (22 caracteres)
+...qR1sT  → Hash de la contraseña con el salt
+```
+
+**Proceso de Login:**
+
+```python
+1. Usuario envía: email + password en texto plano
+2. Backend busca usuario por email
+3. Backend obtiene hashed_password de la BD
+4. bcrypt compara:
+   - password ingresado
+   - hashed_password almacenado
+5. Si coincide → Genera JWT token
+6. Si no coincide → Error 401 Unauthorized
+```
+
+**Ventajas de seguridad:**
+
+- 🚫 Ni administradores pueden ver contraseñas reales
+- 🚫 Si hackean la BD, las contraseñas son inútiles
+- 🚫 Cada contraseña tiene salt único (rainbow tables inútiles)
+- 🚫 Ataques de fuerza bruta son extremadamente lentos
+
+---
+
+## 🏗️ Arquitectura
 
 ### Stack Tecnológico
 
-- **Framework**: FastAPI 0.115+
-- **Base de datos**: PostgreSQL 15
-- **ORM**: SQLAlchemy 2.0
-- **Migraciones**: Alembic 1.14
-- **Autenticación**: JWT (python-jose)
-- **Encriptación**: bcrypt (passlib)
-- **Servidor**: Uvicorn
-- **Containerización**: Docker & Docker Compose
+**Core:**
 
----
+- FastAPI 0.115+ (Framework web Python)
+- PostgreSQL 15 (Base de datos)
+- SQLAlchemy 2.0 (ORM)
+- Alembic (Migraciones)
 
-## Arquitectura del Sistema
+**Seguridad:**
 
-### Estructura de Directorios
+- python-jose (JWT tokens)
+- passlib + bcrypt (Encriptación contraseñas)
+
+**Deployment:**
+
+- Docker + Docker Compose
+- Uvicorn (ASGI server)
+
+### Estructura del Proyecto
 
 ```
 backend/
 ├── app/
-│   ├── __init__.py
-│   ├── main.py              # Aplicación FastAPI principal
-│   ├── config.py            # Configuración y variables de entorno
-│   ├── database.py          # Configuración de SQLAlchemy
-│   ├── auth.py              # Utilidades de autenticación JWT
+│   ├── main.py              # App FastAPI principal
+│   ├── config.py            # Variables de entorno
+│   ├── database.py          # Conexión SQLAlchemy
+│   ├── auth.py              # Utilidades JWT + bcrypt
 │   ├── schemas.py           # Schemas Pydantic
-│   ├── models/
-│   │   └── __init__.py      # Modelos SQLAlchemy
-│   └── routers/
-│       ├── __init__.py
-│       ├── auth.py          # Endpoints de autenticación
-│       ├── products.py      # Endpoints de productos
-│       ├── categories.py    # Endpoints de categorías
-│       ├── reviews.py       # Endpoints de reviews
-│       ├── favorites.py     # Endpoints de favoritos
-│       └── orders.py        # Endpoints de órdenes
-├── alembic/
-│   ├── versions/            # Migraciones de base de datos
-│   └── env.py              # Configuración de Alembic
-├── alembic.ini             # Configuración de Alembic
-├── main.py                 # Punto de entrada
-├── requirements.txt        # Dependencias Python
-├── Dockerfile              # Imagen Docker
-├── .env.example            # Variables de entorno ejemplo
-├── .env                    # Variables de entorno (no en git)
-└── seed_data.py           # Script de inicialización de datos
-```
-
-### Flujo de Peticiones
-
-```
-Cliente (Frontend)
-    ↓
-CORS Middleware
-    ↓
-FastAPI Router
-    ↓
-Authentication Dependency (si requerido)
-    ↓
-Endpoint Handler
-    ↓
-SQLAlchemy ORM
-    ↓
-PostgreSQL Database
+│   ├── models/              # Modelos SQLAlchemy
+│   │   └── __init__.py
+│   └── routers/             # Endpoints organizados
+│       ├── auth.py          # Login, Register, Me
+│       ├── products.py      # CRUD productos
+│       ├── orders.py        # Gestión pedidos
+│       ├── favorites.py     # Favoritos (protegido)
+│       └── reviews.py       # Reseñas
+├── alembic/                 # Migraciones BD
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── seed_data.py            # Datos iniciales
 ```
 
 ---
 
-## Modelo de Datos
+## 📊 Base de Datos
 
-### Diagrama Entidad-Relación
+### Modelo Relacional
 
-```
-┌──────────────┐         ┌──────────────┐
-│    User      │         │   Category   │
-├──────────────┤         ├──────────────┤
-│ id (PK)      │         │ id (PK)      │
-│ email        │         │ name         │
-│ hashed_pwd   │         │ description  │
-│ full_name    │         └──────┬───────┘
-│ is_active    │                │
-│ created_at   │                │
-└──────┬───────┘                │
-       │                        │
-       │ 1:N          N:1       │
-       │                        │
-┌──────┴───────┐         ┌──────┴───────┐
-│    Order     │         │   Product    │
-├──────────────┤         ├──────────────┤
-│ id (PK)      │    ┌────│ id (PK)      │
-│ user_id (FK) │    │    │ sku          │
-│ order_number │    │    │ titulo       │
-│ status       │    │    │ categoria_id │
-│ subtotal     │    │    │ marca        │
-│ shipping_cost│    │    │ precio       │
-│ discount     │    │    │ rating       │
-│ total        │    │    │ stock        │
-│ coupon_code  │    │    │ descripcion  │
-│ ...          │    │    │ imagenes     │
-└──────┬───────┘    │    │ vendidos     │
-       │            │    │ destacado    │
-       │ 1:N        │    │ specs        │
-       │            │    └──────┬───────┘
-┌──────┴───────┐   │           │
-│  OrderItem   │   │           │ 1:N
-├──────────────┤   │           │
-│ id (PK)      │   │    ┌──────┴───────┐
-│ order_id (FK)│───┘    │    Review    │
-│ product_id   │────────│──────────────│
-│ quantity     │    N:1 │ id (PK)      │
-│ price        │        │ product_id   │
-└──────────────┘        │ user_id (FK) │
-                        │ rating       │
-┌──────────────┐        │ comment      │
-│   Favorite   │        │ created_at   │
-├──────────────┤        └──────────────┘
-│ id (PK)      │
-│ user_id (FK) │───┐    ┌──────────────┐
-│ product_id   │───┼────│    Coupon    │
-└──────────────┘   │    ├──────────────┤
-                   │    │ id (PK)      │
-┌──────────────┐   │    │ code         │
-│ShippingMethod│   │    │ discount_type│
-├──────────────┤   │    │ discount_val │
-│ id (PK)      │   │    │ min_purchase │
-│ name         │   │    │ is_active    │
-│ description  │   │    │ expires_at   │
-│ cost         │   │    └──────────────┘
-│ estimated_dys│   │
-└──────────────┘   │    ┌──────────────┐
-                   └────│   Locality   │
-                        ├──────────────┤
-                        │ id (PK)      │
-                        │ name         │
-                        │ region       │
-                        │ country      │
-                        └──────────────┘
+**Entidades Principales:**
+
+1. **User** - Usuarios con contraseñas hasheadas
+2. **Product** - Catálogo de productos
+3. **Category** - Categorías
+4. **Order** - Pedidos de usuarios
+5. **OrderItem** - Items dentro de pedidos
+6. **Review** - Reseñas con rating
+7. **Favorite** - Productos favoritos (requiere auth)
+8. **Coupon** - Cupones de descuento
+9. **ShippingMethod** - Métodos de envío
+10. **Locality** - Localidades para envío
+
+### Tabla Users (Ejemplo de Seguridad)
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR UNIQUE NOT NULL,
+    hashed_password VARCHAR NOT NULL,  -- ¡bcrypt hash, NO texto plano!
+    full_name VARCHAR,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT NOW()
+);
 ```
 
-### Descripción de Entidades
+**Ejemplo de datos reales:**
 
-#### **User** (Usuario)
-
-- Almacena información de usuarios registrados
-- Contraseñas hasheadas con bcrypt
-- Relaciones: Orders (1:N), Reviews (1:N), Favorites (1:N)
-
-#### **Category** (Categoría)
-
-- Categorías de productos
-- Relación: Products (1:N)
-
-#### **Product** (Producto)
-
-- Información completa de productos
-- Incluye imágenes (JSON array), specs (JSON object)
-- Relaciones: Category (N:1), Reviews (1:N), OrderItems (1:N), Favorites (1:N)
-
-#### **Review** (Reseña)
-
-- Reviews de productos por usuarios
-- Rating de 1-5 estrellas
-- Relaciones: User (N:1), Product (N:1)
-
-#### **Order** (Orden/Pedido)
-
-- Pedidos de usuarios
-- Incluye información de envío y pagos
-- Estados: pending, confirmed, shipped, delivered, cancelled
-- Relaciones: User (N:1), OrderItems (1:N)
-
-#### **OrderItem** (Ítem de Orden)
-
-- Líneas de productos en una orden
-- Almacena precio al momento de compra
-- Relaciones: Order (N:1), Product (N:1)
-
-#### **Favorite** (Favorito)
-
-- Productos favoritos de usuarios
-- Relaciones: User (N:1), Product (N:1)
-
-#### **Coupon** (Cupón)
-
-- Cupones de descuento
-- Tipos: percentage (porcentaje) o fixed (monto fijo)
-- Validación de fecha de expiración y compra mínima
-
-#### **ShippingMethod** (Método de Envío)
-
-- Opciones de envío disponibles
-- Incluye costo y tiempo estimado
-
-#### **Locality** (Localidad)
-
-- Localidades/comunas para envío
-- Asociadas a regiones
-
----
-
-## Seguridad y Autenticación
-
-### Sistema de Autenticación JWT
-
-#### Flujo de Registro
-
-1. Usuario envía email y contraseña al endpoint `/api/auth/register`
-2. Sistema valida que el email no exista
-3. Contraseña se hashea con bcrypt (12 rounds)
-4. Usuario se crea en la base de datos
-5. Se retorna información del usuario (sin contraseña)
-
-#### Flujo de Login
-
-1. Usuario envía credenciales a `/api/auth/login`
-2. Sistema valida email y contraseña
-3. Se genera JWT token con expiración de 30 minutos
-4. Token se retorna al cliente
-5. Cliente incluye token en header `Authorization: Bearer <token>`
-
-#### Protección de Endpoints
-
-```python
-# Endpoint protegido ejemplo
-@router.get("/favorites")
-async def get_favorites(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    # current_user es el usuario autenticado
-    favorites = db.query(Favorite).filter(
-        Favorite.user_id == current_user.id
-    ).all()
-    return favorites
 ```
-
-### Encriptación de Contraseñas
-
-- **Algoritmo**: bcrypt
-- **Rounds**: 12 (por defecto en passlib)
-- **Salt**: Generado automáticamente por bcrypt
-- **Nunca** se almacenan contraseñas en texto plano
-
-### Configuración JWT
-
-```python
-# En .env
-SECRET_KEY=your-secret-key-minimum-32-characters
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
-
-⚠️ **IMPORTANTE**: Cambiar `SECRET_KEY` en producción a un valor aleatorio seguro.
-
-**Generar una clave segura de 32 caracteres:**
-
-```powershell
-# PowerShell (Windows)
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-
-# Bash/Linux/Mac
-python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+id: 1
+email: "juan@ejemplo.com"
+hashed_password: "$2b$12$LQVz9kR5eF7xHa8KpYt5K.A7x8ZHq2Nv3Ij4mK8pL6nM9oP0qR1sT"
+full_name: "Juan Pérez"
+is_active: true
 ```
 
 ---
 
-## API Endpoints
+## 🛣️ API Endpoints
 
-### Base URL
-
-```
-http://localhost:8000
-```
-
-### Documentación Interactiva
-
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-### Autenticación
+### Autenticación (Sin protección)
 
 #### POST `/api/auth/register`
 
-Registrar nuevo usuario
+Crear nuevo usuario
 
-**Request Body:**
+**Request:**
 
 ```json
 {
   "email": "user@example.com",
-  "password": "securepassword123",
-  "full_name": "Juan Pérez"
+  "password": "password123",
+  "full_name": "Usuario Ejemplo"
 }
 ```
+
+**Proceso interno:**
+
+1. Valida que email no exista
+2. **Hashea contraseña con bcrypt** (12 rounds)
+3. Guarda usuario en BD
+4. Retorna datos de usuario (sin contraseña)
 
 **Response:** `201 Created`
 
@@ -328,9 +214,9 @@ Registrar nuevo usuario
 {
   "id": 1,
   "email": "user@example.com",
-  "full_name": "Juan Pérez",
+  "full_name": "Usuario Ejemplo",
   "is_active": true,
-  "created_at": "2025-11-03T10:30:00Z"
+  "created_at": "2025-11-04T10:30:00Z"
 }
 ```
 
@@ -338,12 +224,20 @@ Registrar nuevo usuario
 
 Iniciar sesión
 
-**Request Body (Form Data):**
+**Request (form-data):**
 
 ```
 username: user@example.com
-password: securepassword123
+password: password123
 ```
+
+**Proceso interno:**
+
+1. Busca usuario por email
+2. **Valida contraseña con bcrypt.verify()**
+3. Si válida → **Genera token JWT firmado**
+4. Token incluye: email, expiración
+5. Token firmado con SECRET_KEY
 
 **Response:** `200 OK`
 
@@ -356,13 +250,22 @@ password: securepassword123
 
 #### GET `/api/auth/me`
 
-Obtener información del usuario actual (🔒 requiere autenticación)
+Obtener info del usuario actual
 
 **Headers:**
 
 ```
-Authorization: Bearer <token>
+Authorization: Bearer eyJhbGciOiJI...
 ```
+
+**Proceso interno:**
+
+1. Extrae token del header
+2. **Valida firma del token con JWT**
+3. Decodifica payload
+4. Obtiene email del usuario
+5. Busca usuario en BD
+6. Retorna info (sin contraseña)
 
 **Response:** `200 OK`
 
@@ -370,187 +273,83 @@ Authorization: Bearer <token>
 {
   "id": 1,
   "email": "user@example.com",
-  "full_name": "Juan Pérez",
-  "is_active": true,
-  "created_at": "2025-11-03T10:30:00Z"
+  "full_name": "Usuario Ejemplo",
+  "is_active": true
 }
 ```
 
-### Productos
+### Productos (Públicos)
 
 #### GET `/api/products`
 
-Listar productos con filtros opcionales
+Listar productos
 
-**Query Parameters:**
+**Query params opcionales:**
 
-- `skip`: Offset para paginación (default: 0)
-- `limit`: Límite de resultados (default: 100, max: 100)
-- `categoria`: Filtrar por nombre de categoría
-- `search`: Buscar en título de producto
-- `destacado`: Filtrar productos destacados (true/false)
+- `skip`: Paginación (offset)
+- `limit`: Cantidad (max 100)
+- `categoria`: Filtrar por categoría
+- `search`: Buscar en título
+- `destacado`: true/false
 
-**Response:** `200 OK`
-
-```json
-[
-  {
-    "id": 1,
-    "sku": "SKU-1001",
-    "titulo": "Sesshōmaru (Figura de colección 15 cm)",
-    "categoria_id": 1,
-    "marca": "Inuyasha",
-    "precio": 59990,
-    "rating": 5.0,
-    "stock": 0,
-    "descripcion": "Figura coleccionable...",
-    "imagenes": ["img/prod1001-1.png"],
-    "vendidos": 120,
-    "destacado": true,
-    "specs": { "Tipo": "Figura de colección" },
-    "created_at": "2025-11-03T10:30:00Z"
-  }
-]
-```
+**Response:** Lista de productos
 
 #### GET `/api/products/{product_id}`
 
-Obtener producto por ID
+Ver detalle de producto
 
-**Response:** `200 OK` (mismo formato que arriba)
-
-#### GET `/api/products/sku/{sku}`
-
-Obtener producto por SKU
-
-#### POST `/api/products`
-
-Crear producto (🔒 requiere autenticación)
-
-**Request Body:**
-
-```json
-{
-  "sku": "SKU-1050",
-  "titulo": "Nuevo Producto",
-  "categoria_id": 1,
-  "marca": "Marca",
-  "precio": 29990,
-  "stock": 50,
-  "descripcion": "Descripción del producto",
-  "imagenes": ["img/prod.png"],
-  "destacado": false,
-  "specs": {}
-}
-```
-
-#### PUT `/api/products/{product_id}`
-
-Actualizar producto (🔒 requiere autenticación)
-
-#### DELETE `/api/products/{product_id}`
-
-Eliminar producto (🔒 requiere autenticación)
-
-### Categorías
-
-#### GET `/api/categories`
-
-Listar todas las categorías
-
-**Response:** `200 OK`
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Juguetes",
-    "description": null,
-    "created_at": "2025-11-03T10:30:00Z"
-  }
-]
-```
-
-#### POST `/api/categories`
-
-Crear categoría
-
-### Reviews
-
-#### GET `/api/reviews/product/{product_id}`
-
-Obtener reviews de un producto
-
-**Response:** `200 OK`
-
-```json
-[
-  {
-    "id": 1,
-    "product_id": 1,
-    "user_id": 1,
-    "rating": 5,
-    "comment": "Excelente producto",
-    "created_at": "2025-11-03T10:30:00Z"
-  }
-]
-```
-
-#### POST `/api/reviews`
-
-Crear review (🔒 requiere autenticación)
-
-**Request Body:**
-
-```json
-{
-  "product_id": 1,
-  "rating": 5,
-  "comment": "Excelente producto"
-}
-```
-
-#### DELETE `/api/reviews/{review_id}`
-
-Eliminar review (🔒 requiere autenticación, solo propia)
-
-### Favoritos
+### Favoritos (🔒 Protegidos con JWT)
 
 #### GET `/api/favorites`
 
-Obtener favoritos del usuario (🔒 requiere autenticación)
+Obtener favoritos del usuario
+
+**Requiere:** Header `Authorization: Bearer <token>`
+
+**Proceso:**
+
+1. JWT valida token
+2. Extrae user_id del token
+3. Busca favoritos WHERE user_id = token.user_id
+4. Retorna solo favoritos del usuario autenticado
 
 #### POST `/api/favorites`
 
-Agregar a favoritos (🔒 requiere autenticación)
+Agregar producto a favoritos
 
-**Request Body:**
+**Requiere:** JWT token válido
+
+**Request:**
 
 ```json
 {
-  "product_id": 1
+  "product_id": 5
 }
 ```
 
 #### DELETE `/api/favorites/{product_id}`
 
-Eliminar de favoritos (🔒 requiere autenticación)
+Eliminar de favoritos
 
-### Órdenes
+**Requiere:** JWT token válido
+
+### Órdenes (🔒 Protegidos con JWT)
 
 #### GET `/api/orders`
 
-Listar órdenes del usuario (🔒 requiere autenticación)
+Ver pedidos del usuario
 
-#### GET `/api/orders/{order_id}`
+**Requiere:** JWT token
 
-Obtener orden específica (🔒 requiere autenticación)
+**Retorna:** Solo órdenes del usuario autenticado
 
 #### POST `/api/orders`
 
-Crear nueva orden (🔒 requiere autenticación)
+Crear nuevo pedido
 
-**Request Body:**
+**Requiere:** JWT token
+
+**Request:**
 
 ```json
 {
@@ -562,516 +361,251 @@ Crear nueva orden (🔒 requiere autenticación)
     }
   ],
   "shipping_method": "Envío Estándar",
-  "shipping_address": "Calle Falsa 123",
+  "shipping_address": "Calle 123",
   "shipping_locality": "Santiago",
-  "shipping_region": "Región Metropolitana",
+  "shipping_region": "RM",
   "coupon_code": "DESCUENTO10"
 }
 ```
 
-**Response:** `201 Created`
-
-```json
-{
-  "id": 1,
-  "user_id": 1,
-  "order_number": "ORD-20251103103000-ABC123",
-  "status": "pending",
-  "subtotal": 119980,
-  "shipping_cost": 0,
-  "discount": 11998,
-  "total": 107982,
-  "coupon_code": "DESCUENTO10",
-  "items": [...],
-  "created_at": "2025-11-03T10:30:00Z"
-}
-```
-
-#### PATCH `/api/orders/{order_id}/status`
-
-Actualizar estado de orden (🔒 requiere autenticación)
-
-**Request Body:**
-
-```json
-{
-  "status": "confirmed"
-}
-```
-
-Estados válidos: `pending`, `confirmed`, `shipped`, `delivered`, `cancelled`
+**Response:** Orden creada con totales calculados
 
 ---
 
-## Instalación y Despliegue
-
-### Opción 1: Docker Compose (Recomendado)
-
-#### Requisitos
-
-- Docker Desktop
-- Docker Compose
-
-#### Pasos
-
-1. **Clonar el repositorio**
-
-```bash
-git clone <repo-url>
-cd Mini-Amazon-Vue
-```
-
-2. **Configurar variables de entorno**
-
-```bash
-# Copiar archivo de ejemplo
-cp backend/.env.example backend/.env
-
-# Editar .env y cambiar SECRET_KEY
-```
-
-3. **Iniciar servicios**
-
-```bash
-docker-compose up -d
-```
-
-4. **Verificar servicios**
-
-```bash
-docker-compose ps
-```
-
-Deberías ver:
-
-- `miniamazon-db` (PostgreSQL) en puerto 5432
-- `miniamazon-backend` (FastAPI) en puerto 8000
-
-5. **Verificar API**
-
-```bash
-curl http://localhost:8000/health
-```
-
-Respuesta esperada:
-
-```json
-{ "status": "healthy", "service": "mini-amazon-api" }
-```
-
-6. **Poblar base de datos**
-
-```bash
-docker-compose exec backend python seed_data.py
-```
-
-7. **Acceder a documentación**
-
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-#### Comandos Útiles
-
-```bash
-# Ver logs
-docker-compose logs -f backend
-
-# Detener servicios
-docker-compose down
-
-# Detener y eliminar volúmenes (¡cuidado! borra la BD)
-docker-compose down -v
-
-# Reconstruir imágenes
-docker-compose build
-
-# Ejecutar migraciones manualmente
-docker-compose exec backend alembic upgrade head
-
-# Acceder a shell de PostgreSQL
-docker-compose exec db psql -U miniamazon -d miniamazon
-```
-
-### Opción 2: Instalación Local
-
-#### Requisitos
-
-- Python 3.11+
-- PostgreSQL 15+
-- pip
-
-#### Pasos
-
-1. **Instalar PostgreSQL**
-
-- Descargar e instalar desde https://www.postgresql.org/download/
-- Crear base de datos:
-
-```sql
-CREATE DATABASE miniamazon;
-CREATE USER miniamazon WITH PASSWORD 'miniamazon123';
-GRANT ALL PRIVILEGES ON DATABASE miniamazon TO miniamazon;
-```
-
-2. **Configurar Python**
-
-```bash
-cd backend
-
-# Crear entorno virtual
-python -m venv venv
-
-# Activar entorno virtual
-# Windows PowerShell:
-.\venv\Scripts\Activate.ps1
-# Windows CMD:
-.\venv\Scripts\activate.bat
-# Linux/Mac:
-source venv/bin/activate
-
-# Instalar dependencias
-pip install -r requirements.txt
-```
-
-3. **Configurar variables de entorno**
-
-```bash
-cp .env.example .env
-# Editar .env con configuración local
-```
-
-Ejemplo `.env` local:
-
-```
-DATABASE_URL=postgresql://miniamazon:miniamazon123@localhost:5432/miniamazon
-SECRET_KEY=your-secret-key-change-this
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-FRONTEND_URL=http://localhost:5173
-API_HOST=0.0.0.0
-API_PORT=8000
-```
-
-4. **Ejecutar migraciones**
-
-```bash
-alembic upgrade head
-```
-
-5. **Poblar base de datos**
-
-```bash
-python seed_data.py
-```
-
-6. **Iniciar servidor**
-
-```bash
-# Desarrollo (con hot-reload)
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# Producción
-uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-7. **Verificar**
-
-- API: http://localhost:8000
-- Docs: http://localhost:8000/docs
-
----
-
-## Uso de la API
-
-### Ejemplo: Flujo Completo de Usuario
-
-#### 1. Registro de Usuario
-
-```bash
-curl -X POST http://localhost:8000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "juan@example.com",
-    "password": "password123",
-    "full_name": "Juan Pérez"
-  }'
-```
-
-#### 2. Login
-
-```bash
-curl -X POST http://localhost:8000/api/auth/login \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "username=juan@example.com&password=password123"
-```
-
-Respuesta:
-
-```json
-{
-  "access_token": "eyJhbGciOiJI...",
-  "token_type": "bearer"
-}
-```
-
-#### 3. Ver Productos
-
-```bash
-curl http://localhost:8000/api/products?categoria=Juguetes
-```
-
-#### 4. Agregar a Favoritos
-
-```bash
-curl -X POST http://localhost:8000/api/favorites \
-  -H "Authorization: Bearer eyJhbGciOiJI..." \
-  -H "Content-Type: application/json" \
-  -d '{"product_id": 1}'
-```
-
-#### 5. Crear Orden
-
-```bash
-curl -X POST http://localhost:8000/api/orders \
-  -H "Authorization: Bearer eyJhbGciOiJI..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "items": [
-      {
-        "product_id": 1,
-        "quantity": 1,
-        "price": 59990
-      }
-    ],
-    "shipping_method": "Envío Estándar",
-    "shipping_address": "Calle Falsa 123",
-    "shipping_locality": "Santiago",
-    "shipping_region": "RM",
-    "coupon_code": "DESCUENTO10"
-  }'
-```
-
-#### 6. Ver Órdenes
-
-```bash
-curl http://localhost:8000/api/orders \
-  -H "Authorization: Bearer eyJhbGciOiJI..."
-```
-
----
-
-## Migraciones de Base de Datos
-
-### ¿Qué es Alembic?
-
-Alembic es una herramienta de migraciones de base de datos para SQLAlchemy. Permite:
-
-- Versionado de esquemas de BD
-- Aplicar cambios de forma incremental
-- Rollback de migraciones
-- Generación automática de migraciones
-
-### Comandos Comunes
-
-#### Crear nueva migración (manual)
-
-```bash
-alembic revision -m "add user table"
-```
-
-Esto crea un archivo en `alembic/versions/` donde puedes definir upgrade() y downgrade().
-
-#### Crear migración automática
-
-```bash
-alembic revision --autogenerate -m "add product specs column"
-```
-
-Alembic detecta cambios en modelos y genera la migración automáticamente.
-
-#### Aplicar migraciones
-
-```bash
-# Aplicar todas las migraciones pendientes
-alembic upgrade head
-
-# Aplicar hasta una revisión específica
-alembic upgrade <revision_id>
-
-# Aplicar una migración adelante
-alembic upgrade +1
-```
-
-#### Revertir migraciones
-
-```bash
-# Revertir última migración
-alembic downgrade -1
-
-# Revertir hasta una revisión
-alembic downgrade <revision_id>
-
-# Revertir todas
-alembic downgrade base
-```
-
-#### Ver historial
-
-```bash
-# Ver migraciones actuales
-alembic current
-
-# Ver historial
-alembic history
-
-# Ver migraciones pendientes
-alembic history --indicate-current
-```
-
-### Estructura de Migración
-
-Archivo generado: `alembic/versions/xxxx_description.py`
+## 🔒 Sistema de Permisos
+
+### Endpoints Públicos (Sin token JWT)
+
+- `GET /api/products` - Ver productos
+- `GET /api/categories` - Ver categorías
+- `GET /api/reviews/product/{id}` - Ver reseñas
+- `POST /api/auth/register` - Registrarse
+- `POST /api/auth/login` - Login
+
+### Endpoints Protegidos (Requieren JWT)
+
+- `GET /api/auth/me` - Info usuario actual
+- `GET /api/favorites` - Ver favoritos
+- `POST /api/favorites` - Agregar favorito
+- `DELETE /api/favorites/{id}` - Quitar favorito
+- `GET /api/orders` - Ver mis pedidos
+- `POST /api/orders` - Crear pedido
+- `POST /api/reviews` - Crear reseña
+- `DELETE /api/reviews/{id}` - Borrar mi reseña
+
+### Implementación de Protección
 
 ```python
-"""add product specs column
-
-Revision ID: 123abc
-Revises: 456def
-Create Date: 2025-11-03 10:30:00.000000
-
-"""
-from alembic import op
-import sqlalchemy as sa
-
-# revision identifiers
-revision = '123abc'
-down_revision = '456def'
-branch_labels = None
-depends_on = None
-
-def upgrade() -> None:
-    # Aplicar cambios
-    op.add_column('products',
-        sa.Column('specs', sa.JSON(), nullable=True)
-    )
-
-def downgrade() -> None:
-    # Revertir cambios
-    op.drop_column('products', 'specs')
+# En cada endpoint protegido:
+@router.get("/favorites")
+async def get_favorites(
+    current_user: User = Depends(get_current_user),  # ← Valida JWT aquí
+    db: Session = Depends(get_db)
+):
+    # current_user ya está autenticado
+    favorites = db.query(Favorite).filter(
+        Favorite.user_id == current_user.id
+    ).all()
+    return favorites
 ```
 
-### Workflow de Desarrollo
+**Función `get_current_user`:**
 
-1. **Modificar modelos** en `app/models/`
-2. **Generar migración**: `alembic revision --autogenerate -m "descripcion"`
-3. **Revisar migración** generada en `alembic/versions/`
-4. **Aplicar**: `alembic upgrade head`
-5. **Commit** del archivo de migración
+```python
+def get_current_user(token: str):
+    try:
+        # 1. Decodifica y valida firma del JWT
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
 
-### Buenas Prácticas
+        # 2. Verifica expiración
+        if payload.get("exp") < now():
+            raise HTTPException(401, "Token expirado")
 
-✅ **SÍ hacer:**
+        # 3. Busca usuario en BD
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            raise HTTPException(401, "Usuario no encontrado")
 
-- Revisar migraciones autogeneradas antes de aplicar
-- Usar mensajes descriptivos
-- Probar downgrade antes de hacer commit
-- Mantener migraciones pequeñas y focalizadas
-- Hacer commit de archivos de migración
-
-❌ **NO hacer:**
-
-- Modificar migraciones ya aplicadas en producción
-- Borrar archivos de migración
-- Aplicar migraciones directamente en producción sin probar
+        return user
+    except:
+        raise HTTPException(401, "Token inválido")
+```
 
 ---
 
-## Troubleshooting
+## 🚀 Deployment
 
-### Problema: Puerto 8000 ya en uso
+### Con Docker Compose (Recomendado)
 
 ```bash
-# Windows
-netstat -ano | findstr :8000
-taskkill /PID <pid> /F
+# Iniciar todo
+docker-compose up -d
 
-# Linux/Mac
-lsof -ti:8000 | xargs kill -9
+# Poblar BD
+docker-compose exec backend python seed_data.py
+
+# Ver logs
+docker-compose logs -f backend
 ```
 
-### Problema: Base de datos no conecta
+### Variables de Entorno Importantes
 
-1. Verificar que PostgreSQL esté corriendo
-2. Verificar credenciales en `.env`
-3. Verificar que la base de datos exista
+**Archivo `.env`:**
 
 ```bash
-# En Docker
+# Base de datos
+DATABASE_URL=postgresql://miniamazon:password@db:5432/miniamazon
+
+# Seguridad JWT (¡CAMBIAR EN PRODUCCIÓN!)
+SECRET_KEY=tu-clave-secreta-de-32-caracteres-minimo
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# CORS
+FRONTEND_URL=http://localhost:5173
+```
+
+**⚠️ IMPORTANTE:**
+
+- Generar SECRET_KEY seguro: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+- Nunca subir `.env` a Git
+- En producción usar HTTPS siempre
+
+---
+
+## 🧪 Testing
+
+### Probar Autenticación con curl
+
+```bash
+# 1. Registrar usuario
+curl -X POST http://localhost:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com","password":"pass123","full_name":"Test User"}'
+
+# 2. Login
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=test@test.com&password=pass123"
+
+# Response: {"access_token":"eyJhbG...","token_type":"bearer"}
+
+# 3. Usar token en endpoint protegido
+curl -X GET http://localhost:8000/api/favorites \
+  -H "Authorization: Bearer eyJhbG..."
+```
+
+### Ver contraseñas hasheadas en BD
+
+```bash
+# Conectar a PostgreSQL
 docker-compose exec db psql -U miniamazon -d miniamazon
 
-# Local
-psql -U miniamazon -d miniamazon
-```
+# Ver usuarios
+SELECT id, email, hashed_password FROM users;
 
-### Problema: Migraciones fallan
-
-```bash
-# Ver estado actual
-alembic current
-
-# Ver historial
-alembic history
-
-# Marcar como aplicada manualmente (¡cuidado!)
-alembic stamp head
-```
-
-### Problema: Dependencias no se instalan
-
-```bash
-# Limpiar caché de pip
-pip cache purge
-
-# Reinstalar
-pip install --no-cache-dir -r requirements.txt
+# Ejemplo de output:
+# id |      email       |                     hashed_password
+# ---+------------------+--------------------------------------------------------
+#  1 | test@test.com    | $2b$12$LQVz9kR5eF7xHa8KpYt5K.A7x8ZHq2...
+#  2 | juan@ejemplo.com | $2b$12$xY9pL3mN8qR2sT4vW6aB7cD8eF9g...
 ```
 
 ---
 
-## Próximos Pasos y Mejoras
+## 📚 Documentación Interactiva
 
-### Funcionalidades Futuras
+### Swagger UI
 
-- [ ] Sistema de notificaciones por email
-- [ ] Paginación mejorada con cursores
-- [ ] Búsqueda full-text en productos
-- [ ] Sistema de recomendaciones
-- [ ] Dashboard de administración
-- [ ] Integración con pasarelas de pago
-- [ ] Sistema de inventario avanzado
-- [ ] Reportes y analytics
+**URL:** http://localhost:8000/docs
 
-### Optimizaciones
+Permite:
 
-- [ ] Cache con Redis
-- [ ] Búsqueda con Elasticsearch
-- [ ] CDN para imágenes
-- [ ] Rate limiting
-- [ ] Monitoring con Prometheus
-- [ ] Logs centralizados
+- ✅ Ver todos los endpoints
+- ✅ Probar requests directamente
+- ✅ Ver schemas de request/response
+- ✅ Autenticarse con JWT (botón "Authorize")
+
+### ReDoc
+
+**URL:** http://localhost:8000/redoc
+
+Documentación alternativa más limpia.
 
 ---
 
-## Contacto y Soporte
+## 💡 Mejores Prácticas Implementadas
 
-Para preguntas o soporte:
+### Seguridad
 
-- Documentación API: http://localhost:8000/docs
-- Issues: [GitHub Issues]
-- Email: soporte@miniamazon.com
+- ✅ Contraseñas hasheadas con bcrypt (nunca texto plano)
+- ✅ Tokens JWT con expiración
+- ✅ Validación de tokens en cada request protegido
+- ✅ SECRET_KEY en variable de entorno (no en código)
+- ✅ CORS configurado para frontend específico
+
+### Base de Datos
+
+- ✅ Migraciones con Alembic (versionado de esquema)
+- ✅ Relaciones con claves foráneas
+- ✅ Índices en campos frecuentes (email, sku)
+- ✅ Constraints de unicidad (email único)
+
+### API Design
+
+- ✅ REST conventions (GET, POST, PUT, DELETE)
+- ✅ Status codes apropiados (200, 201, 401, 404, 500)
+- ✅ Paginación en listados
+- ✅ Filtros opcionales
+- ✅ Validación con Pydantic schemas
+
+### Code Quality
+
+- ✅ Separación en routers por funcionalidad
+- ✅ Dependency injection con FastAPI
+- ✅ Type hints en Python
+- ✅ Manejo de errores centralizado
+- ✅ Logging para debugging
 
 ---
 
-**Fecha de última actualización**: 3 de Noviembre, 2025
-**Versión del documento**: 1.0
-**Versión de la API**: 1.0.0
+## 🆘 Troubleshooting
+
+### Error 401: Token inválido
+
+- Verifica que el token no haya expirado (30 min)
+- Verifica header: `Authorization: Bearer <token>`
+- Haz login nuevamente para obtener token fresco
+
+### Error 422: Validation error
+
+- Revisa que el body del request cumpla con el schema
+- Verifica tipos de datos (string, int, bool)
+- Consulta `/docs` para ver schema esperado
+
+### No puedo hacer login
+
+- Verifica que el email exista en BD
+- La contraseña se valida con bcrypt (case-sensitive)
+- Revisa logs: `docker-compose logs backend`
+
+### Olvidé mi contraseña
+
+- Las contraseñas hasheadas con bcrypt NO se pueden recuperar
+- Necesitas implementar sistema de "reset password"
+- O crear nuevo usuario
+
+---
+
+## 📞 Recursos Adicionales
+
+- **Guía Rápida**: `QUICK_START.md`
+- **Guía de Presentación**: `PRESENTACION_15MIN.md`
+- **FastAPI Docs**: https://fastapi.tiangolo.com
+- **JWT.io**: https://jwt.io (para decodificar tokens)
+- **bcrypt**: https://github.com/pyca/bcrypt
+
+---
+
+**Desarrollado con seguridad en mente** 🛡️
