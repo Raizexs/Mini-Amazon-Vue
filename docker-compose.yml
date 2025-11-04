@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-  # PostgreSQL Database
+  # PostgreSQL Database 
   db:
     image: postgres:15-alpine
     container_name: miniamazon-db
