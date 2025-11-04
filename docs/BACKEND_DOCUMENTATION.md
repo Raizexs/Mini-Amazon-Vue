@@ -36,7 +36,7 @@ Mini-Amazon Backend es una API REST desarrollada con **FastAPI** que proporciona
 - **Autenticación**: JWT (python-jose)
 - **Encriptación**: bcrypt (passlib)
 - **Servidor**: Uvicorn
-- **Containerización**: Docker & Docker Compose 
+- **Containerización**: Docker & Docker Compose
 
 ---
 
@@ -280,6 +280,16 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 ```
 
 ⚠️ **IMPORTANTE**: Cambiar `SECRET_KEY` en producción a un valor aleatorio seguro.
+
+**Generar una clave segura de 32 caracteres:**
+
+```powershell
+# PowerShell (Windows)
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+
+# Bash/Linux/Mac
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
 
 ---
 
