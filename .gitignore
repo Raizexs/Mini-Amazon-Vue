@@ -86,7 +86,7 @@ token.txt
 alembic/__pycache__/
 alembic/versions/__pycache__/
 
-# JetBrains DataGrip
+# JetBrains DataGrip 
 .idea/
 *.iml
 *.iws
