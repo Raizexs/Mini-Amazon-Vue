@@ -95,3 +95,23 @@ async def remove_favorite(
     db.commit()
     
     return {"message": "Favorite removed successfully"}
+
+
+@router.get("/{product_id}/check")
+async def check_favorite(
+    product_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Check if a product is in the current user's favorites (requires authentication)
+    
+    - **product_id**: Product ID to check
+    - Returns: { "is_favorite": boolean }
+    """
+    exists = db.query(Favorite).filter(
+        Favorite.user_id == current_user.id,
+        Favorite.product_id == product_id
+    ).first()
+
+    return {"is_favorite": bool(exists)}
