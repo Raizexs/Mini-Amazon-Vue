@@ -272,6 +272,7 @@ const reviews = ref([]); // {id, autor, rating, comentario, fecha, productId}
 const formReview = ref({ autor: "", rating: 5, comentario: "" });
 
 const relacionados = ref([]);
+const favIds = ref(new Set()); // Estado reactivo para favoritos
 
 /* ---------- Utilidades ---------- */
 const fmtCLP = (n) =>
@@ -359,21 +360,26 @@ function pickRelated(all, current, min = 3, max = 8) {
 /* ---------- Favoritos ---------- */
 function loadFavs() {
   try {
-    return new Set(JSON.parse(localStorage.getItem("mini.favs") || "[]"));
+    favIds.value = new Set(
+      JSON.parse(localStorage.getItem("mini.favs") || "[]")
+    );
   } catch {
-    return new Set();
+    favIds.value = new Set();
   }
 }
-function saveFavs(set) {
-  localStorage.setItem("mini.favs", JSON.stringify([...set]));
+function saveFavs() {
+  localStorage.setItem("mini.favs", JSON.stringify([...favIds.value]));
 }
 function isFav(id) {
-  return loadFavs().has(id);
+  return favIds.value.has(id);
 }
 function toggleFav(id) {
-  const s = loadFavs();
-  s.has(id) ? s.delete(id) : s.add(id);
-  saveFavs(s);
+  if (favIds.value.has(id)) {
+    favIds.value.delete(id);
+  } else {
+    favIds.value.add(id);
+  }
+  saveFavs();
 }
 
 /* ---------- Carrito ---------- */
@@ -603,7 +609,10 @@ async function loadData() {
   cargando.value = false;
 }
 
-onMounted(loadData);
+onMounted(() => {
+  loadFavs();
+  loadData();
+});
 watch(
   () => route.params.id,
   () => {
