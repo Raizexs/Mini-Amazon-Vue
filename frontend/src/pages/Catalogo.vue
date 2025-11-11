@@ -577,22 +577,28 @@ function mergeCategories(primary, fallback) {
 }
 
 /* ====== Favs (localStorage) ====== */
-const favs = ref(new Set());
+const favIds = ref(new Set());
 function loadFavs() {
   try {
-    favs.value = new Set(JSON.parse(localStorage.getItem("mini.favs") || "[]"));
+    favIds.value = new Set(
+      JSON.parse(localStorage.getItem("mini.favs") || "[]")
+    );
   } catch {
-    favs.value = new Set();
+    favIds.value = new Set();
   }
 }
 function saveFavs() {
-  localStorage.setItem("mini.favs", JSON.stringify([...favs.value]));
+  localStorage.setItem("mini.favs", JSON.stringify([...favIds.value]));
 }
 function isFav(id) {
-  return favs.value.has(id);
+  return favIds.value.has(id);
 }
 function toggleFav(id) {
-  favs.value.has(id) ? favs.value.delete(id) : favs.value.add(id);
+  if (favIds.value.has(id)) {
+    favIds.value.delete(id);
+  } else {
+    favIds.value.add(id);
+  }
   saveFavs();
 }
 
