@@ -170,3 +170,200 @@ onMounted(async () => {
   }
 });
 </script>
+
+<style scoped>
+/* ===== Animaciones del Dashboard (estilo Login/Register) ===== */
+
+/* Animación de entrada desde la izquierda */
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animación de entrada desde la derecha */
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animación de escala */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animación de pulso */
+@keyframes pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Animación desde abajo */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Animación de cambio de gradiente */
+@keyframes gradientShift {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Animación de flotación de ícono */
+@keyframes floatIcon {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Animación deslizante hacia abajo */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Aplicar animaciones a elementos */
+.hero-wrap {
+  animation: fadeInUp 0.8s ease;
+}
+
+.hero-title {
+  animation: fadeInLeft 0.8s ease 0.2s backwards;
+}
+
+.hero-lead {
+  animation: fadeInLeft 0.8s ease 0.3s backwards;
+}
+
+.hero-wrap .btn {
+  animation: scaleIn 0.6s ease 0.4s backwards;
+}
+
+.hero-wrap .row.text-center {
+  animation: fadeInUp 0.8s ease 0.5s backwards;
+}
+
+.hero-fig {
+  animation: fadeInRight 0.8s ease 0.3s backwards;
+}
+
+.hero-badge {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.hero-plate {
+  animation: floatIcon 3s ease-in-out infinite;
+}
+
+.section-title {
+  animation: fadeInUp 0.6s ease;
+}
+
+.section-sub {
+  animation: fadeInUp 0.6s ease 0.1s backwards;
+}
+
+.product-card {
+  animation: scaleIn 0.5s ease backwards;
+}
+
+.col-6:nth-child(1) .product-card,
+.col-md-4:nth-child(1) .product-card,
+.col-lg-3:nth-child(1) .product-card {
+  animation-delay: 0.1s;
+}
+
+.col-6:nth-child(2) .product-card,
+.col-md-4:nth-child(2) .product-card,
+.col-lg-3:nth-child(2) .product-card {
+  animation-delay: 0.2s;
+}
+
+.col-6:nth-child(3) .product-card,
+.col-md-4:nth-child(3) .product-card,
+.col-lg-3:nth-child(3) .product-card {
+  animation-delay: 0.3s;
+}
+
+.col-6:nth-child(4) .product-card,
+.col-md-4:nth-child(4) .product-card,
+.col-lg-3:nth-child(4) .product-card {
+  animation-delay: 0.4s;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  transition: all 0.3s ease;
+}
+
+/* Mantener el overflow para las animaciones */
+.hero-wrap {
+  position: relative;
+}
+
+/* Spinner con animación */
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Efecto de aparición suave para todo el contenido */
+section {
+  animation: fadeInUp 0.6s ease;
+}
+</style>
