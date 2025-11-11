@@ -48,6 +48,27 @@ async def get_products(
     return products
 
 
+@router.get("/search", response_model=List[ProductResponse])
+async def search_products(
+    q: Optional[str] = Query(None, description="Search query for product title"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    db: Session = Depends(get_db)
+):
+    """
+    Search products by title. This endpoint exists to support the frontend's
+    `/api/products/search?q=...` calls. It is functionally equivalent to
+    `/api/products?search=...`.
+    """
+    query = db.query(Product)
+
+    if q:
+        query = query.filter(Product.titulo.ilike(f"%{q}%"))
+
+    products = query.offset(skip).limit(limit).all()
+    return products
+
+
 @router.get("/{product_id}", response_model=ProductResponse)
 async def get_product(product_id: int, db: Session = Depends(get_db)):
     """
