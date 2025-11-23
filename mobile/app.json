@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Mini Amazon",
+    "slug": "miniamazon-full-stack",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "miniamazon",
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.miniamazon.mobile",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.miniamazon.mobile",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "backgroundColor": "#232F3E"
+      },
+      "permissions": ["INTERNET"],
+      "googleServicesFile": "./google-services.json",
+      "usesCleartextTraffic": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ba2bb2a8-678f-4fa9-9669-ecfeaa66f067"
+      }
+    },
+    "plugins": [
+      "@react-native-google-signin/google-signin"
+    ]
+  }
+}

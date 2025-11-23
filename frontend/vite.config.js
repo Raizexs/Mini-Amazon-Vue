@@ -28,7 +28,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: API_URL,
           changeOrigin: true,
-          // rewrite: (path) => path.replace(/^\/api/, ''), 
+          // rewrite:(path) => path.replace(/^\/api/, ''), 
           // ^ Descomenta si tu backend NO tiene el prefijo /api en sus rutas.
         },
       },
