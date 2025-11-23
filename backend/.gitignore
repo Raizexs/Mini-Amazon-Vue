@@ -23,9 +23,18 @@ wheels/
 .installed.cfg
 *.egg
 
-# Environment
+# Environment variables (CREDENCIALES - NUNCA SUBIR)
 .env
 .env.local
+.env.*.local
+.env.production
+.env.development
+
+# Firebase credentials (NUNCA SUBIR)
+firebase-credentials.json
+*-firebase-adminsdk-*.json
+firebase-*.json
+serviceAccountKey.json
 
 # IDE
 .vscode/
@@ -36,7 +45,28 @@ wheels/
 
 # Database
 *.db
+*.sqlite
 *.sqlite3
+*.dump
+*.sql.gz
+
+# Logs
+*.log
+logs/
 
 # Alembic
 alembic/versions/*.pyc
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp

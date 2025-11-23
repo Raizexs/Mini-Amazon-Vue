@@ -1,4 +1,36 @@
-# Python 
+# ==========================================
+# CREDENCIALES Y ARCHIVOS SENSIBLES
+# ==========================================
+# NUNCA subir estos archivos al repositorio
+
+# Variables de entorno (contienen API keys, secrets, etc.)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.local
+
+# Firebase credentials
+firebase-credentials.json
+*-firebase-adminsdk-*.json
+firebase-*.json
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
+
+# Keystores y certificados
+*.jks
+*.p8
+*.p12
+*.key
+*.keystore
+*.mobileprovision
+release.keystore
+
+# ==========================================
+# PYTHON / BACKEND
+# ==========================================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -28,25 +60,34 @@ ENV/
 env.bak/
 venv.bak/
 
-# IDEs
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
+# ==========================================
+# NODE.JS / FRONTEND / MOBILE
+# ==========================================
+node_modules/
+dist/
+dist-ssr/
 
-# Environment variables
-.env
-.env.local
-.env.*.local
+# Expo
+.expo/
+.expo-shared/
+web-build/
 
-# Database
+# Native builds (generados, no commitear)
+android/
+ios/
+
+# ==========================================
+# BASES DE DATOS
+# ==========================================
 *.db
 *.sqlite
 *.sqlite3
+*.dump
+*.sql.gz
 
-# Logs
+# ==========================================
+# LOGS
+# ==========================================
 *.log
 logs/
 npm-debug.log*
@@ -55,39 +96,55 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Node.js / Frontend
-node_modules/
-dist/
-dist-ssr/
-*.local
+# ==========================================
+# IDEs Y EDITORES
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+*.iws
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
 
-# Testing
+# ==========================================
+# TESTING
+# ==========================================
 .coverage
 htmlcov/
 .pytest_cache/
 .tox/
+coverage/
 
+# ==========================================
+# SISTEMA OPERATIVO
+# ==========================================
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+
+# ==========================================
+# OTROS
+# ==========================================
 # Docker
 *.pid
 *.seed
 *.pid.lock
 
-# OS
-Thumbs.db
-.DS_Store
-*.bak
-*.tmp
-
-# Test scripts (PowerShell)
-test_*.ps1
-token.txt
-
-# Alembic (keep versions folder but ignore cache)
+# Alembic cache
 alembic/__pycache__/
 alembic/versions/__pycache__/
 
+# Scripts de prueba personales
+test_*.ps1
+token.txt
+
 # JetBrains DataGrip 
-.idea/
 *.iml
 *.iws
 

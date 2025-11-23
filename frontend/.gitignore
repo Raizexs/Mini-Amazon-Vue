@@ -7,13 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
-.DS_Store
+
+# Build output
 dist
 dist-ssr
 coverage
+
+# Environment variables (CREDENCIALES - NUNCA SUBIR)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
 *.local
 
+# Testing
 /cypress/videos/
 /cypress/screenshots/
 
@@ -26,12 +36,8 @@ coverage
 *.njsproj
 *.sln
 *.sw?
-
 *.tsbuildinfo
 
-# Environment files (NUNCA subir al repositorio)
-.env
-.env.local
-.env.*.local
-.env.production
-.env.development
+# OS
+.DS_Store
+Thumbs.db
