@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   const configureGoogleSignIn = () => {
     GoogleSignin.configure({
-      webClientId: "REMOVED-rifo0o74n42e8iv787p6m3fh251jv7et.apps.googleusercontent.com", // Web Client ID
+      webClientId: "522400273734-rifo0o74n42e8iv787p6m3fh251jv7et.apps.googleusercontent.com", // Web Client ID
       offlineAccess: true,
     });
   };
