@@ -2,6 +2,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .routers import auth, products, categories, reviews, favorites, orders
+from fastapi.staticfiles import StaticFiles
+import os
+
+# Define path to frontend public images
+# Assuming backend is at root/backend and frontend is at root/frontend
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+IMG_DIR = os.path.join(BASE_DIR, "frontend", "public", "img")
 
 app = FastAPI(
     title="Mini-Amazon API",
@@ -45,6 +52,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount static files
+if os.path.exists(IMG_DIR):
+    app.mount("/img", StaticFiles(directory=IMG_DIR), name="img")
+else:
+    print(f"WARNING: Image directory not found at {IMG_DIR}")
 
 # Include routers
 app.include_router(auth.router)

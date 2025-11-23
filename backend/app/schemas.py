@@ -144,8 +144,19 @@ class OrderItemBase(BaseModel):
     price: float
 
 
-class OrderItemCreate(OrderItemBase):
-    pass
+class OrderItemCreate(BaseModel):
+    product_id: Optional[int] = None
+    id: Optional[int] = None  # Accept 'id' as alternative to 'product_id'
+    quantity: int
+    price: float
+    
+    def model_post_init(self, __context):
+        # If 'id' is provided but not 'product_id', use 'id' as 'product_id'
+        if self.id is not None and self.product_id is None:
+            self.product_id = self.id
+        # Ensure at least one is provided
+        if self.product_id is None:
+            raise ValueError("Either 'product_id' or 'id' must be provided")
 
 
 class OrderItemResponse(OrderItemBase):
@@ -192,6 +203,7 @@ class FavoriteResponse(BaseModel):
     id: int
     user_id: int
     product_id: int
+    product: ProductResponse  # Include full product details
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)
