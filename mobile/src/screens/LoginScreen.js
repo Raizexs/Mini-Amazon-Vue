@@ -8,25 +8,34 @@ import {
   Dimensions,
   Animated,
   StatusBar,
+  Platform,
 } from "react-native";
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuth } from "../contexts/AuthContext";
-import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from "../constants/theme";
 
 const { width, height } = Dimensions.get('window');
+
+// 🎨 Hero UI Theme: Definición local para asegurar el estilo exacto
+const HERO = {
+  background: '#09090b', // Zinc-950 (Fondo profundo)
+  surface: 'rgba(39, 39, 42, 0.4)', // Zinc-800 con transparencia (Glass)
+  border: 'rgba(255, 255, 255, 0.08)', // Borde sutil
+  primaryGradient: ['#7828C8', '#9333EA'], // Violeta Hero
+  text: '#FAFAFA', // Blanco tiza
+  textMuted: '#A1A1AA', // Gris Zinc-400
+  radius: 16,
+};
 
 export default function LoginScreen() {
   const { signInWithGoogle, loading } = useAuth();
   
-  // Animations
+  // Animaciones (Simplificadas para reducir ruido visual)
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const scaleAnim = useRef(new Animated.Value(0.96)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Entrance animations
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -35,397 +44,268 @@ export default function LoginScreen() {
       }),
       Animated.spring(slideAnim, {
         toValue: 0,
-        tension: 50,
-        friction: 7,
+        tension: 30,
+        friction: 8,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 50,
-        friction: 7,
+        tension: 30,
         useNativeDriver: true,
       }),
     ]).start();
-
-    // Continuous rotation animation for background
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 20000,
-        useNativeDriver: true,
-      })
-    ).start();
   }, []);
 
+  const handlePressIn = () => {
+    Animated.spring(buttonScale, { toValue: 0.96, useNativeDriver: true }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(buttonScale, { toValue: 1, useNativeDriver: true }).start();
+  };
+
   const handleGoogleSignIn = async () => {
-    Animated.sequence([
-      Animated.timing(buttonScale, {
-        toValue: 0.95,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.spring(buttonScale, {
-        toValue: 1,
-        tension: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-    
     try {
       await signInWithGoogle();
     } catch (error) {
-      alert("Error al iniciar sesión. Por favor intenta de nuevo.");
+      alert("Error al iniciar sesión.");
     }
   };
 
-  const rotate = rotateAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '360deg'],
-  });
-
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.darkBg} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {/* Animated Background Gradient */}
-      <Animated.View style={[styles.bgGradient, { transform: [{ rotate }] }]}>
-        <LinearGradient
-          colors={['#667eea', '#764ba2', '#0f0f1e']}
-          style={styles.gradientFill}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      </Animated.View>
+      {/* 1. Iluminación Ambiental (Orbs) */}
+      {/* Reemplaza la rotación compleja por luces estáticas suaves */}
+      <View style={styles.ambientContainer}>
+        <View style={[styles.glowOrb, { top: -80, left: -50, backgroundColor: '#5b21b6' }]} /> 
+        <View style={[styles.glowOrb, { top: height * 0.4, right: -100, backgroundColor: '#1e3a8a' }]} />
+      </View>
 
       <Animated.View style={[
         styles.content,
-        {
-          opacity: fadeAnim,
-          transform: [
-            { translateY: slideAnim },
-            { scale: scaleAnim }
-          ]
+        { 
+          opacity: fadeAnim, 
+          transform: [{ translateY: slideAnim }, { scale: scaleAnim }] 
         }
       ]}>
-        {/* Badge */}
-        <View style={styles.badge}>
-          <Text style={styles.badgeIcon}>✨</Text>
-          <Text style={styles.badgeText}>Bienvenido a Mini-Amazon</Text>
+        
+        {/* HEADER: Minimalista y centrado */}
+        <View style={styles.headerSection}>
+          <View style={styles.pillBadge}>
+            <Text style={styles.pillText}>✨ Nueva Experiencia</Text>
+          </View>
+
+          <Text style={styles.title}>
+            Mini <Text style={styles.titleGradient}>Amazon</Text>
+          </Text>
+          
+          <Text style={styles.subtitle}>
+            Calidad premium y envíos rápidos en tu bolsillo.
+          </Text>
         </View>
 
-        {/* Title */}
-        <Text style={styles.title}>Mini-Amazon</Text>
-        <LinearGradient
-          colors={['#667eea', '#764ba2']}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.titleGradient}
-        >
-          <Text style={styles.titleHighlight}>Tu tienda de confianza</Text>
-        </LinearGradient>
-
-        {/* Description */}
-        <Text style={styles.description}>
-          Descubre miles de productos premium con la mejor calidad, precios competitivos y envíos rápidos.
-        </Text>
-
-        {/* Features */}
-        <View style={styles.features}>
-          <FeatureItem icon="🛡️" title="Compra Segura" desc="Protección total" />
-          <FeatureItem icon="⚡" title="Envío Express" desc="24-48 horas" />
-          <FeatureItem icon="🏆" title="Calidad Premium" desc="Garantizado" />
+        {/* FEATURES: Diseño Glassmorphism Horizontal (Ahorra espacio) */}
+        <View style={styles.glassRow}>
+          <GlassFeature icon="🛡️" label="Seguro" />
+          <View style={styles.divider} />
+          <GlassFeature icon="⚡" label="Rápido" />
+          <View style={styles.divider} />
+          <GlassFeature icon="💎" label="Premium" />
         </View>
 
-        {/* Google Sign-In Button */}
-        <Animated.View style={[styles.buttonWrapper, { transform: [{ scale: buttonScale }] }]}>
-          <TouchableOpacity
-            style={styles.googleButton}
-            onPress={handleGoogleSignIn}
-            disabled={loading}
-            activeOpacity={0.9}
-          >
-            <LinearGradient
-              colors={['#4285F4', '#357AE8']}
-              style={styles.googleButtonGradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+        {/* ACTION: Botón moderno y términos */}
+        <View style={styles.actionSection}>
+          <Animated.View style={{ transform: [{ scale: buttonScale }], width: '100%' }}>
+            <TouchableOpacity
+              onPress={handleGoogleSignIn}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}
+              disabled={loading}
+              activeOpacity={0.9}
+              style={styles.shadowWrapper}
             >
-              {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <>
-                  <View style={styles.googleIconContainer}>
-                    <Text style={styles.googleIcon}>G</Text>
-                  </View>
-                  <Text style={styles.googleButtonText}>Continuar con Google</Text>
-                </>
-              )}
-            </LinearGradient>
-          </TouchableOpacity>
-        </Animated.View>
+              <LinearGradient
+                colors={HERO.primaryGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.heroButton}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <View style={styles.iconBox}>
+                      <Text style={styles.googleG}>G</Text>
+                    </View>
+                    <Text style={styles.btnText}>Continuar con Google</Text>
+                  </>
+                )}
+              </LinearGradient>
+            </TouchableOpacity>
+          </Animated.View>
 
-        {/* Stats */}
-        <View style={styles.stats}>
-          <View style={styles.statItem}>
-            <LinearGradient
-              colors={['#667eea', '#764ba2']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.statNumberGradient}
-            >
-              <Text style={styles.statNumber}>1K+</Text>
-            </LinearGradient>
-            <Text style={styles.statLabel}>CLIENTES FELICES</Text>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statItem}>
-            <LinearGradient
-              colors={['#667eea', '#764ba2']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.statNumberGradient}
-            >
-              <Text style={styles.statNumber}>500+</Text>
-            </LinearGradient>
-            <Text style={styles.statLabel}>PRODUCTOS</Text>
-          </View>
-          
-          <View style={styles.statDivider} />
-          
-          <View style={styles.statItem}>
-            <LinearGradient
-              colors={['#667eea', '#764ba2']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.statNumberGradient}
-            >
-              <Text style={styles.statNumber}>4.9★</Text>
-            </LinearGradient>
-            <Text style={styles.statLabel}>CALIFICACIÓN</Text>
-          </View>
+          <Text style={styles.termsText}>
+            Al entrar aceptas nuestros <Text style={styles.link}>Términos</Text> y <Text style={styles.link}>Privacidad</Text>.
+          </Text>
         </View>
 
-        {/* Terms */}
-        <Text style={styles.termsText}>
-          Al continuar, aceptas nuestros{'\n'}
-          <Text style={styles.termsLink}>Términos de Servicio</Text> y{' '}
-          <Text style={styles.termsLink}>Política de Privacidad</Text>
-        </Text>
       </Animated.View>
     </View>
   );
 }
 
-const FeatureItem = ({ icon, title, desc }) => (
+// Componente auxiliar para las features
+const GlassFeature = ({ icon, label }) => (
   <View style={styles.featureItem}>
-    <LinearGradient
-      colors={['#667eea', '#764ba2']}
-      style={styles.featureIcon}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-    >
-      <Text style={styles.featureIconText}>{icon}</Text>
-    </LinearGradient>
-    <View style={styles.featureContent}>
-      <Text style={styles.featureTitle}>{title}</Text>
-      <Text style={styles.featureDesc}>{desc}</Text>
-    </View>
+    <Text style={styles.featureIcon}>{icon}</Text>
+    <Text style={styles.featureLabel}>{label}</Text>
   </View>
 );
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.darkBg,
+    backgroundColor: HERO.background,
+    justifyContent: 'center', // Centrado vertical perfecto
   },
-  bgGradient: {
-    position: 'absolute',
-    top: -height * 0.5,
-    left: -width * 0.5,
-    width: width * 2,
-    height: height * 2,
-    opacity: 0.1,
-  },
-  gradientFill: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: SPACING['2xl'],
-    paddingTop: SPACING['6xl'],
-  },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.sm,
-    backgroundColor: 'rgba(167, 139, 250, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(167, 139, 250, 0.3)',
-    borderRadius: BORDER_RADIUS.full,
-    marginBottom: SPACING.lg,
-  },
-  badgeIcon: {
-    fontSize: TYPOGRAPHY.base,
-    marginRight: SPACING.xs,
-  },
-  badgeText: {
-    fontSize: TYPOGRAPHY.sm,
-    color: COLORS.white,
-    fontWeight: TYPOGRAPHY.medium,
-  },
-  title: {
-    fontSize: TYPOGRAPHY['5xl'],
-    fontWeight: TYPOGRAPHY.black,
-    color: COLORS.white,
-    textAlign: 'center',
-    marginBottom: SPACING.xs,
-  },
-  titleGradient: {
-    borderRadius: BORDER_RADIUS.md,
-    paddingHorizontal: SPACING.sm,
-    marginBottom: SPACING.lg,
-  },
-  titleHighlight: {
-    fontSize: TYPOGRAPHY['3xl'],
-    fontWeight: TYPOGRAPHY.black,
-    color: COLORS.white,
-    textAlign: 'center',
-  },
-  description: {
-    fontSize: TYPOGRAPHY.lg,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    marginBottom: SPACING['3xl'],
-    paddingHorizontal: SPACING.xl,
-    lineHeight: 26,
-  },
-  features: {
-    width: '100%',
-    marginBottom: SPACING['3xl'],
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: SPACING.lg,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-    borderRadius: BORDER_RADIUS.lg,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    marginBottom: SPACING.md,
-  },
-  featureIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: BORDER_RADIUS.md,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SPACING.md,
-  },
-  featureIconText: {
-    fontSize: TYPOGRAPHY['2xl'],
-  },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: TYPOGRAPHY.base,
-    fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.white,
-    marginBottom: 2,
-  },
-  featureDesc: {
-    fontSize: TYPOGRAPHY.sm,
-    color: COLORS.textMuted,
-  },
-  buttonWrapper: {
-    width: "100%",
-    marginBottom: SPACING['3xl'],
-  },
-  googleButton: {
-    width: '100%',
-    borderRadius: BORDER_RADIUS.full,
+  // --- Ambient Background ---
+  ambientContainer: {
+    ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-    ...SHADOWS.purple,
   },
-  googleButtonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING['2xl'],
+  glowOrb: {
+    position: 'absolute',
+    width: width * 1.2,
+    height: width * 1.2,
+    borderRadius: width,
+    opacity: 0.12, // Muy sutil
   },
-  googleIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: BORDER_RADIUS.sm,
-    backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: SPACING.md,
-  },
-  googleIcon: {
-    fontSize: TYPOGRAPHY.xl,
-    fontWeight: TYPOGRAPHY.bold,
-    color: '#4285F4',
-  },
-  googleButtonText: {
-    color: COLORS.white,
-    fontSize: TYPOGRAPHY.base,
-    fontWeight: TYPOGRAPHY.semibold,
-  },
-  stats: {
-    flexDirection: 'row',
+  // --- Main Content ---
+  content: {
+    paddingHorizontal: 24,
     width: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: BORDER_RADIUS['2xl'],
-    padding: SPACING['2xl'],
-    marginBottom: SPACING['2xl'],
-    ...SHADOWS.lg,
+    gap: 32, // Espaciado consistente entre bloques
   },
-  statItem: {
-    flex: 1,
+  
+  // --- Header ---
+  headerSection: {
     alignItems: 'center',
   },
-  statNumberGradient: {
-    borderRadius: BORDER_RADIUS.sm,
-    paddingHorizontal: SPACING.xs,
-    marginBottom: SPACING.xs,
+  pillBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: HERO.border,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    marginBottom: 16,
   },
-  statNumber: {
-    fontSize: TYPOGRAPHY['3xl'],
-    fontWeight: TYPOGRAPHY.black,
-    color: COLORS.white,
-    textAlign: 'center',
-  },
-  statLabel: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.white,
-    fontWeight: TYPOGRAPHY.bold,
-    textAlign: 'center',
+  pillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#D8B4FE', // Violeta claro
     letterSpacing: 0.5,
   },
-  statDivider: {
-    width: 2,
-    height: '70%',
-    alignSelf: 'center',
-    backgroundColor: 'rgba(102, 126, 234, 0.5)',
+  title: {
+    fontSize: 38,
+    fontWeight: '800',
+    color: HERO.text,
+    textAlign: 'center',
+    marginBottom: 8,
+    letterSpacing: -1,
+  },
+  titleGradient: {
+    color: '#C084FC',
+  },
+  subtitle: {
+    fontSize: 15,
+    color: HERO.textMuted,
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: '85%',
+  },
+
+  // --- Glass Row (Features) ---
+  glassRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+    backgroundColor: HERO.surface, // Fondo Glass
+    borderRadius: HERO.radius,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: HERO.border, // Borde sutil
+  },
+  featureItem: {
+    alignItems: 'center',
+    width: '25%',
+  },
+  featureIcon: {
+    fontSize: 22,
+    marginBottom: 6,
+  },
+  featureLabel: {
+    color: '#E4E4E7',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  divider: {
+    width: 1,
+    height: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+
+  // --- Actions ---
+  actionSection: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  shadowWrapper: {
+    width: '100%',
+    shadowColor: '#9333EA',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  heroButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 56,
+    borderRadius: 16,
+    width: '100%',
+  },
+  iconBox: {
+    width: 26,
+    height: 26,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  googleG: {
+    color: '#7828C8',
+    fontWeight: '900',
+    fontSize: 16,
+  },
+  btnText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+    letterSpacing: 0.2,
   },
   termsText: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textDark,
-    textAlign: "center",
-    paddingHorizontal: SPACING['2xl'],
-    lineHeight: 18,
+    marginTop: 24,
+    fontSize: 12,
+    color: '#52525B', // Gris oscuro para no distraer
+    textAlign: 'center',
   },
-  termsLink: {
-    color: COLORS.purpleLight,
-    fontWeight: TYPOGRAPHY.semibold,
+  link: {
+    color: '#A1A1AA',
+    fontWeight: '600',
   },
 });

@@ -9,14 +9,32 @@ import {
   Dimensions,
   ActivityIndicator,
   Animated,
-  StatusBar
+  StatusBar,
+  Platform
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCart } from '../contexts/CartContext';
 import { productsAPI } from '../services/api';
-import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from '../constants/theme';
+import { getImage } from '../public/images';
 
-const { width } = Dimensions.get('window');
+// Mantengo tus imports, pero usaremos el tema HERO para el estilo visual
+import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from '../constants/theme';
+
+const { width, height } = Dimensions.get('window');
+
+// 🎨 HERO UI THEME (Local)
+const HERO = {
+  background: '#09090b', // Zinc-950
+  glass: 'rgba(24, 24, 27, 0.75)', // Glass dark
+  glassBorder: 'rgba(255, 255, 255, 0.08)',
+  primary: '#7828C8',
+  primaryGradient: ['#7828C8', '#9333EA'],
+  text: '#FAFAFA',
+  textMuted: '#A1A1AA',
+  success: '#17C964',
+  danger: '#F31260',
+  radius: 24,
+};
 
 export default function ProductDetailScreen({ route, navigation }) {
   const { productId } = route.params;
@@ -36,9 +54,7 @@ export default function ProductDetailScreen({ route, navigation }) {
   const loadProduct = async () => {
     try {
       setLoading(true);
-      console.log("Fetching product details for ID:", productId);
       const data = await productsAPI.getProductById(productId);
-      console.log("Product details loaded:", data ? "Success" : "Empty");
       setProduct(data);
     } catch (error) {
       console.error("Error loading product:", error);
@@ -52,8 +68,6 @@ export default function ProductDetailScreen({ route, navigation }) {
   const handleAddToCart = () => {
     setAdding(true);
     addToCart(product, quantity);
-    
-    // Simulate feedback
     setTimeout(() => {
       setAdding(false);
       alert("¡Agregado al carrito!");
@@ -63,43 +77,49 @@ export default function ProductDetailScreen({ route, navigation }) {
   if (loading || !product) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={COLORS.purpleStart} />
+        <ActivityIndicator size="large" color={HERO.primary} />
       </View>
     );
   }
 
   const images = product.imagenes && product.imagenes.length > 0 
-    ? product.imagenes 
-    : ['https://via.placeholder.com/400'];
+    ? product.imagenes.map(img => getImage(img)).filter(Boolean)
+    : [];
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       
-      {/* Header Transparent/Solid on Scroll */}
+      {/* 1. AMBIENT LIGHTING (Background Orbs) */}
+      <View style={styles.ambientContainer}>
+        <View style={[styles.glowOrb, { top: -100, left: -50, backgroundColor: '#4c1d95' }]} />
+        <View style={[styles.glowOrb, { top: height * 0.4, right: -80, backgroundColor: '#1e3a8a' }]} />
+      </View>
+
+      {/* Header Glass Animation */}
       <Animated.View 
         style={[
           styles.header,
           {
             backgroundColor: scrollY.interpolate({
               inputRange: [0, 200],
-              outputRange: ['transparent', 'rgba(15, 15, 30, 0.95)'],
-              extrapolate: 'clamp'
-            }),
-            borderBottomColor: scrollY.interpolate({
-              inputRange: [0, 200],
-              outputRange: ['transparent', 'rgba(255, 255, 255, 0.1)'],
+              outputRange: ['transparent', 'rgba(9, 9, 11, 0.9)'], // Zinc-950 blur
               extrapolate: 'clamp'
             }),
             borderBottomWidth: 1,
+            borderBottomColor: scrollY.interpolate({
+              inputRange: [0, 200],
+              outputRange: ['transparent', HERO.glassBorder],
+              extrapolate: 'clamp'
+            }),
           }
         ]}
       >
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
-          <Text style={styles.iconButtonText}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.glassBtn}>
+          <Text style={styles.glassBtnText}>←</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={styles.iconButton}>
-          <Text style={styles.iconButtonText}>🛒</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={styles.glassBtn}>
+          <Text style={styles.glassBtnText}>🛒</Text>
         </TouchableOpacity>
       </Animated.View>
 
@@ -110,6 +130,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         )}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }} // Espacio para el footer flotante
       >
         {/* Image Gallery */}
         <View style={styles.galleryContainer}>
@@ -122,17 +143,23 @@ export default function ProductDetailScreen({ route, navigation }) {
               setActiveImage(newIndex);
             }}
           >
-            {images.map((img, index) => (
+            {images.length > 0 ? images.map((img, index) => (
               <View key={index} style={styles.imageWrapper}>
-                <Image source={{ uri: img }} style={styles.image} resizeMode="contain" />
+                <Image source={img} style={styles.image} resizeMode="contain" />
               </View>
-            ))}
+            )) : (
+              <View style={styles.imageWrapper}>
+                <View style={styles.placeholderContainer}>
+                  <Text style={{ fontSize: 60 }}>📦</Text>
+                </View>
+              </View>
+            )}
           </ScrollView>
           
-          {/* Pagination Dots */}
+          {/* Pagination Dots (Minimal) */}
           <View style={styles.pagination}>
             {images.map((_, index) => (
-              <View 
+              <Animated.View 
                 key={index} 
                 style={[
                   styles.dot, 
@@ -143,32 +170,38 @@ export default function ProductDetailScreen({ route, navigation }) {
           </View>
         </View>
 
-        {/* Content */}
-        <View style={styles.contentContainer}>
-          <Text style={styles.brand}>{product.marca}</Text>
-          
-          <View style={styles.titleRow}>
-            <Text style={styles.title}>{product.titulo}</Text>
-            <Text style={styles.price}>${product.precio.toLocaleString()}</Text>
+        {/* GLASS SHEET CONTENT */}
+        <View style={styles.glassSheet}>
+          {/* Handle bar visual */}
+          <View style={styles.sheetHandle} />
+
+          <View style={styles.headerRow}>
+             <View style={{flex: 1}}>
+                <Text style={styles.brand}>{product.marca}</Text>
+                <Text style={styles.title}>{product.titulo}</Text>
+             </View>
+             <Text style={styles.price}>${product.precio.toLocaleString()}</Text>
           </View>
 
-          <View style={styles.ratingRow}>
-            <View style={styles.starsContainer}>
-              <Text style={styles.stars}>⭐⭐⭐⭐⭐</Text>
-              <Text style={styles.ratingCount}>4.9 (120 reseñas)</Text>
+          {/* Rating & Stock */}
+          <View style={styles.metaRow}>
+            <View style={styles.ratingBadge}>
+              <Text style={{fontSize: 12}}>⭐ 4.9</Text>
             </View>
+            
             <View style={[
               styles.stockBadge, 
-              { 
-                backgroundColor: product.stock > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                borderColor: product.stock > 0 ? '#10B981' : '#EF4444' 
-              }
+              { borderColor: product.stock > 0 ? HERO.success : HERO.danger }
             ]}>
+              <View style={[
+                  styles.stockDot,
+                  { backgroundColor: product.stock > 0 ? HERO.success : HERO.danger }
+              ]} />
               <Text style={[
                 styles.stockText,
-                { color: product.stock > 0 ? '#10B981' : '#EF4444' }
+                { color: product.stock > 0 ? HERO.success : HERO.danger }
               ]}>
-                {product.stock > 0 ? 'En Stock' : 'Agotado'}
+                {product.stock > 0 ? 'Disponible' : 'Agotado'}
               </Text>
             </View>
           </View>
@@ -181,58 +214,54 @@ export default function ProductDetailScreen({ route, navigation }) {
           <View style={styles.divider} />
 
           <Text style={styles.sectionTitle}>Especificaciones</Text>
-          <View style={styles.specsContainer}>
+          <View style={styles.specsGlass}>
             {product.specs && Object.entries(product.specs).map(([key, value], index) => (
-              <View key={key} style={[styles.specRow, index === Object.keys(product.specs).length - 1 && styles.lastSpecRow]}>
+              <View key={key} style={[styles.specRow, index !== Object.keys(product.specs).length - 1 && styles.specDivider]}>
                 <Text style={styles.specKey}>{key}</Text>
                 <Text style={styles.specValue}>{value}</Text>
               </View>
             ))}
           </View>
-          
-          <View style={{ height: 120 }} />
         </View>
       </ScrollView>
 
-      {/* Footer Actions */}
-      <View style={styles.footer}>
-        <View style={styles.quantityControl}>
-          <TouchableOpacity 
-            style={styles.qtyBtn} 
-            onPress={() => setQuantity(Math.max(1, quantity - 1))}
-          >
-            <Text style={styles.qtyBtnText}>-</Text>
-          </TouchableOpacity>
-          <Text style={styles.qtyValue}>{quantity}</Text>
-          <TouchableOpacity 
-            style={styles.qtyBtn} 
-            onPress={() => setQuantity(Math.min(product.stock, quantity + 1))}
-          >
-            <Text style={styles.qtyBtnText}>+</Text>
-          </TouchableOpacity>
-        </View>
+      {/* FLOATING GLASS FOOTER */}
+      <View style={styles.footerContainer}>
+        <View style={styles.glassFooter}>
+            {/* Quantity Stepper */}
+            <View style={styles.qtyControl}>
+                <TouchableOpacity onPress={() => setQuantity(Math.max(1, quantity - 1))} style={styles.qtyBtn}>
+                    <Text style={styles.qtyText}>-</Text>
+                </TouchableOpacity>
+                <Text style={styles.qtyValue}>{quantity}</Text>
+                <TouchableOpacity onPress={() => setQuantity(Math.min(product.stock, quantity + 1))} style={styles.qtyBtn}>
+                    <Text style={styles.qtyText}>+</Text>
+                </TouchableOpacity>
+            </View>
 
-        <TouchableOpacity 
-          style={[styles.addToCartBtn, product.stock === 0 && styles.disabledBtn]}
-          onPress={handleAddToCart}
-          disabled={product.stock === 0 || adding}
-          activeOpacity={0.8}
-        >
-          <LinearGradient
-            colors={product.stock > 0 ? [COLORS.purpleStart, COLORS.purpleEnd] : ['#555', '#444']}
-            style={styles.addToCartGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            {adding ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={styles.addToCartText}>
-                {product.stock > 0 ? 'Agregar al Carrito' : 'Agotado'}
-              </Text>
-            )}
-          </LinearGradient>
-        </TouchableOpacity>
+            {/* Add Button */}
+            <TouchableOpacity 
+                style={styles.addBtnWrapper}
+                onPress={handleAddToCart}
+                disabled={product.stock === 0 || adding}
+                activeOpacity={0.8}
+            >
+                <LinearGradient
+                    colors={product.stock > 0 ? HERO.primaryGradient : ['#3f3f46', '#27272a']}
+                    style={styles.addBtnGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                >
+                    {adding ? (
+                        <ActivityIndicator color="white" />
+                    ) : (
+                        <Text style={styles.addBtnText}>
+                            {product.stock > 0 ? 'Agregar' : 'Agotado'}
+                        </Text>
+                    )}
+                </LinearGradient>
+            </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -241,252 +270,237 @@ export default function ProductDetailScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.darkBg,
+    backgroundColor: HERO.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: COLORS.darkBg,
+    backgroundColor: HERO.background,
   },
+  
+  /* --- AMBIENT --- */
+  ambientContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  glowOrb: {
+    position: 'absolute',
+    width: width * 1,
+    height: width * 1,
+    borderRadius: width,
+    opacity: 0.15,
+  },
+
+  /* --- HEADER --- */
   header: {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    paddingTop: 50,
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.md,
+    top: 0, left: 0, right: 0,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 10 : 50,
+    paddingHorizontal: 20,
+    paddingBottom: 10,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     zIndex: 100,
   },
-  iconButton: {
-    width: 44,
-    height: 44,
+  glassBtn: {
+    width: 44, height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.05)', // Glassy
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: HERO.glassBorder,
+    backdropFilter: 'blur(10px)',
+  },
+  glassBtnText: { color: 'white', fontSize: 20 },
+
+  /* --- GALLERY --- */
+  galleryContainer: {
+    height: 420,
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  iconButtonText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  galleryContainer: {
-    height: 450,
-    backgroundColor: '#fff', // White background for product images usually looks better
-    position: 'relative',
+    paddingTop: 60,
   },
   imageWrapper: {
     width: width,
-    height: 450,
+    height: 350,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: SPACING['2xl'],
   },
-  image: {
-    width: '100%',
-    height: '100%',
+  image: { width: '85%', height: '100%' },
+  placeholderContainer: {
+    width: 200, height: 200,
+    borderRadius: 100,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    justifyContent: 'center', alignItems: 'center',
   },
   pagination: {
-    position: 'absolute',
-    bottom: SPACING.xl,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: SPACING.sm,
+    position: 'absolute',
+    bottom: 40,
+    gap: 8,
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: 'rgba(0,0,0,0.1)',
+    width: 6, height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   activeDot: {
-    backgroundColor: COLORS.purpleStart,
-    width: 24,
+    backgroundColor: HERO.primary,
+    width: 20,
   },
-  contentContainer: {
-    padding: SPACING.xl,
-    backgroundColor: COLORS.darkBg,
+
+  /* --- GLASS SHEET (Content) --- */
+  glassSheet: {
+    backgroundColor: HERO.glass, // Zinc-900 con opacidad
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    marginTop: -32,
-    minHeight: 500,
-    ...SHADOWS.lg,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 40,
+    minHeight: 600,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: HERO.glassBorder,
+    marginTop: -20, // Overlap effect
   },
-  brand: {
-    fontSize: TYPOGRAPHY.sm,
-    color: COLORS.purpleLight,
-    fontWeight: TYPOGRAPHY.bold,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-    letterSpacing: 1,
+  sheetHandle: {
+    width: 40, height: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 24,
   },
-  titleRow: {
+  headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: SPACING.md,
-    gap: SPACING.md,
+    marginBottom: 16,
+  },
+  brand: {
+    color: '#D8B4FE', // Violeta claro
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 4,
   },
   title: {
-    fontSize: TYPOGRAPHY['2xl'],
-    color: COLORS.white,
-    fontWeight: TYPOGRAPHY.bold,
+    color: HERO.text,
+    fontSize: 26,
+    fontWeight: '800',
     lineHeight: 32,
-    flex: 1,
+    marginRight: 10,
   },
   price: {
-    fontSize: TYPOGRAPHY['2xl'],
-    color: COLORS.white,
-    fontWeight: TYPOGRAPHY.bold,
-    lineHeight: 32,
+    color: HERO.text,
+    fontSize: 24,
+    fontWeight: '700',
   },
-  ratingRow: {
+  
+  metaRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: SPACING.xl,
+    gap: 12,
+    marginBottom: 24,
   },
-  starsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: SPACING.lg,
-  },
-  stars: {
-    fontSize: 16,
-    marginRight: 6,
-  },
-  ratingCount: {
-    color: COLORS.textMuted,
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: TYPOGRAPHY.medium,
+  ratingBadge: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1, borderColor: HERO.glassBorder,
   },
   stockBadge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: 4,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    gap: 6,
   },
-  stockText: {
-    fontSize: 10,
-    fontWeight: 'bold',
-    textTransform: 'uppercase',
-  },
+  stockDot: { width: 6, height: 6, borderRadius: 3 },
+  stockText: { fontSize: 12, fontWeight: '600' },
+
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    marginVertical: SPACING.lg,
+    backgroundColor: HERO.glassBorder,
+    marginVertical: 24,
   },
   sectionTitle: {
-    fontSize: TYPOGRAPHY.lg,
-    color: COLORS.white,
-    fontWeight: TYPOGRAPHY.bold,
-    marginBottom: SPACING.md,
+    color: HERO.text,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
   },
   description: {
-    fontSize: TYPOGRAPHY.base,
-    color: COLORS.textMuted,
+    color: HERO.textMuted,
+    fontSize: 15,
     lineHeight: 24,
   },
-  specsContainer: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: BORDER_RADIUS.lg,
-    padding: SPACING.md,
+
+  /* --- SPECS GLASS TABLE --- */
+  specsGlass: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
+    borderColor: HERO.glassBorder,
   },
   specRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: SPACING.sm,
+    paddingVertical: 12,
+  },
+  specDivider: {
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  lastSpecRow: {
-    borderBottomWidth: 0,
-  },
-  specKey: {
-    color: COLORS.textMuted,
-    fontSize: TYPOGRAPHY.sm,
-    flex: 1,
-  },
-  specValue: {
-    color: COLORS.white,
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: TYPOGRAPHY.medium,
-    flex: 1,
-    textAlign: 'right',
-  },
-  footer: {
+  specKey: { color: HERO.textMuted, fontSize: 14 },
+  specValue: { color: HERO.text, fontSize: 14, fontWeight: '600' },
+
+  /* --- FOOTER --- */
+  footerContainer: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.darkBg,
-    paddingHorizontal: SPACING.xl,
-    paddingTop: SPACING.md,
-    paddingBottom: SPACING.xl,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.md,
+    bottom: 20,
+    left: 20,
+    right: 20,
   },
-  quantityControl: {
+  glassFooter: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(24, 24, 27, 0.9)', // Footer más opaco para contraste
+    padding: 12,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: HERO.glassBorder,
+    alignItems: 'center',
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  qtyControl: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: BORDER_RADIUS.lg,
+    borderRadius: 18,
     padding: 4,
     height: 50,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderColor: HERO.glassBorder,
   },
   qtyBtn: {
-    width: 40,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    width: 40, height: '100%',
+    justifyContent: 'center', alignItems: 'center',
   },
-  qtyBtnText: {
-    color: COLORS.white,
-    fontSize: 20,
-    fontWeight: 'bold',
+  qtyText: { color: 'white', fontSize: 20, fontWeight: '500' },
+  qtyValue: { color: 'white', fontSize: 16, fontWeight: '700', minWidth: 20, textAlign: 'center' },
+
+  addBtnWrapper: { flex: 1, height: 50, borderRadius: 18, overflow: 'hidden' },
+  addBtnGradient: {
+    flex: 1, justifyContent: 'center', alignItems: 'center',
   },
-  qtyValue: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginHorizontal: SPACING.md,
-    minWidth: 20,
-    textAlign: 'center',
-  },
-  addToCartBtn: {
-    flex: 1,
-    borderRadius: BORDER_RADIUS.lg,
-    overflow: 'hidden',
-    height: 50,
-  },
-  disabledBtn: {
-    opacity: 0.5,
-  },
-  addToCartGradient: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addToCartText: {
-    color: COLORS.white,
-    fontSize: TYPOGRAPHY.base,
-    fontWeight: TYPOGRAPHY.bold,
+  addBtnText: {
+    color: 'white', fontSize: 16, fontWeight: 'bold', letterSpacing: 0.5,
   },
 });

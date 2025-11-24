@@ -11,15 +11,29 @@ import {
   Animated,
   StatusBar,
   Image,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { productsAPI, API_URL } from "../services/api";
+import { productsAPI } from "../services/api";
 import { getImage } from '../public/images';
-import { COLORS, TYPOGRAPHY, SPACING, BORDER_RADIUS, SHADOWS } from "../constants/theme";
+import { COLORS, SPACING, BORDER_RADIUS } from "../constants/theme";
 
-const { width } = Dimensions.get("window");
-const CARD_WIDTH = (width - SPACING.lg * 3) / 2;
+const { width, height } = Dimensions.get("window");
+const GAP = 15; 
+const PADDING_HORIZONTAL = 48;
+const CARD_WIDTH = (width - PADDING_HORIZONTAL - GAP) / 2;
 const heroImage = require("../../assets/hero-image.png");
+
+const HERO = {
+  background: '#09090b', // Zinc-950
+  card: 'rgba(39, 39, 42, 0.4)', // Zinc-800 glass
+  cardBorder: 'rgba(255, 255, 255, 0.08)',
+  primary: '#7828C8',
+  primaryGradient: ['#7828C8', '#9333EA'],
+  text: '#FAFAFA',
+  textMuted: '#A1A1AA', // Zinc-400
+  radius: 16,
+};
 
 export default function HomeScreen({ navigation }) {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -31,7 +45,7 @@ export default function HomeScreen({ navigation }) {
     loadFeaturedProducts();
     Animated.timing(fadeAnim, {
       toValue: 1,
-      duration: 700,
+      duration: 800,
       useNativeDriver: true,
     }).start();
   }, []);
@@ -72,14 +86,19 @@ export default function HomeScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={COLORS.purpleStart} />
+        <ActivityIndicator size="large" color={HERO.primary} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.darkBg} />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      
+      <View style={styles.ambientContainer}>
+        <View style={[styles.glowOrb, { top: -100, left: -50, backgroundColor: '#5b21b6' }]} /> 
+        <View style={[styles.glowOrb, { top: height * 0.3, right: -100, backgroundColor: '#1e3a8a' }]} />
+      </View>
 
       <FlatList
         data={featuredProducts}
@@ -88,86 +107,77 @@ export default function HomeScreen({ navigation }) {
         numColumns={2}
         columnWrapperStyle={styles.row}
         contentContainerStyle={styles.productList}
+        showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={COLORS.purpleStart}
-            colors={[COLORS.purpleStart]}
+            tintColor={HERO.primary}
+            colors={[HERO.primary]}
+            progressViewOffset={40}
           />
         }
         ListHeaderComponent={
           <Animated.View style={{ opacity: fadeAnim }}>
-            {/* HERO */}
-            <LinearGradient
-              colors={["rgba(102,126,234,0.35)", "rgba(118,75,162,0.35)"]}
-              style={styles.hero}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              {/* Top row */}
-              <View style={styles.heroTopRow}>
-                <TouchableOpacity
-                  style={styles.iconCircle}
-                  onPress={() => navigation.navigate("Profile")}
-                >
-                  <Text style={styles.iconText}>👤</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.iconCircle}
-                  onPress={() => navigation.navigate("Cart")}
-                >
-                  <Text style={styles.iconText}>🛒</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Text + image */}
-              <View style={styles.heroContent}>
-                <Text style={styles.heroEyebrow}>Bienvenido</Text>
-                <Text style={styles.heroTitle}>La mejor tecnología a tu alcance</Text>
-                <Text style={styles.heroSubtitle}>
-                  Descubre productos seleccionados especialmente para ti, con envíos rápidos y
-                  soporte dedicado.
-                </Text>
-
-                <TouchableOpacity
-                  style={styles.heroButton}
-                  activeOpacity={0.9}
-                  onPress={() => navigation.navigate("Products")}
-                >
-                  <LinearGradient
-                    colors={[COLORS.purpleStart, COLORS.purpleEnd]}
-                    style={styles.heroButtonGradient}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                  >
-                    <Text style={styles.heroButtonText}>Explorar catálogo</Text>
-                    <Text style={styles.heroButtonArrow}>→</Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-
-                {/* IMAGEN CIRCULAR */}
-                <View style={styles.heroImageWrapper}>
-                  <View style={styles.heroImageCircle}>
-                    <Image source={heroImage} style={styles.heroImage} resizeMode="cover" />
-                  </View>
+            
+            <View style={styles.heroContainer}>
+              <View style={styles.topBar}>
+                <View style={styles.pillBadge}>
+                    <Text style={styles.pillText}>✨ Bienvenido</Text>
+                </View>
+                
+                <View style={styles.topIcons}>
+                    <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Profile")}>
+                    <Text style={styles.iconText}>👤</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconButton} onPress={() => navigation.navigate("Cart")}>
+                    <Text style={styles.iconText}>🛒</Text>
+                    </TouchableOpacity>
                 </View>
               </View>
-            </LinearGradient>
 
-            {/* CARD DE STATS FUERA DEL HERO */}
-            <View style={styles.heroStatsWrapper}>
-              <View style={styles.heroStatsCard}>
-                <StatItem number="100+" label="PRODUCTOS" />
-                <View style={styles.statDivider} />
-                <StatItem number="24/7" label="SOPORTE" />
-                <View style={styles.statDivider} />
-                <StatItem number="48h" label="ENVÍOS" />
+              <View style={styles.heroContent}>
+                <View style={styles.heroTextContainer}>
+                    <Text style={styles.heroTitle}>
+                        Tecnología <Text style={styles.heroTitleGradient}>Premium</Text>
+                    </Text>
+                    <Text style={styles.heroSubtitle}>
+                        Selección exclusiva con envíos express y garantía total.
+                    </Text>
+
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        onPress={() => navigation.navigate("Products")}
+                        style={styles.heroCtaWrapper}
+                    >
+                        <LinearGradient
+                            colors={HERO.primaryGradient}
+                            style={styles.heroButton}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                        >
+                            <Text style={styles.heroButtonText}>Explorar</Text>
+                            <Text style={styles.heroButtonArrow}>→</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.heroImageContainer}>
+                    <View style={styles.imageGlow} />
+                    <Image source={heroImage} style={styles.heroImage} resizeMode="cover" />
+                </View>
+              </View>
+
+
+              <View style={styles.glassStatsBar}>
+                <StatItem number="100+" label="Productos" />
+                <View style={styles.divider} />
+                <StatItem number="24/7" label="Soporte" />
+                <View style={styles.divider} />
+                <StatItem number="48h" label="Envíos" />
               </View>
             </View>
 
-            {/* Sección destacados */}
             <View style={styles.sectionHeader}>
               <View>
                 <Text style={styles.sectionTitle}>Destacados</Text>
@@ -191,412 +201,364 @@ export default function HomeScreen({ navigation }) {
   );
 }
 
-/* PRODUCT CARD */
-
 const ProductCard = ({ item, index, onPress }) => {
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        delay: index * 80,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 1,
-        duration: 220,
-        delay: index * 80,
-        useNativeDriver: true,
-      }),
+      Animated.spring(scaleAnim, { toValue: 1, delay: index * 100, useNativeDriver: true }),
+      Animated.timing(opacityAnim, { toValue: 1, duration: 500, delay: index * 100, useNativeDriver: true }),
     ]).start();
   }, []);
 
-  const imageUrl =
-    item.imagenes && item.imagenes.length > 0 ? getImage(item.imagenes[0]) : null;
+  const imageUrl = item.imagenes && item.imagenes.length > 0 ? getImage(item.imagenes[0]) : null;
 
   return (
-    <Animated.View
-      style={[
-        styles.productCardWrapper,
-        { transform: [{ scale: scaleAnim }], opacity: opacityAnim },
-      ]}
-    >
-      <TouchableOpacity style={styles.productCard} onPress={onPress} activeOpacity={0.9}>
-        <View style={styles.productImageContainer}>
+    <Animated.View style={[styles.cardWrapper, { transform: [{ scale: scaleAnim }], opacity: opacityAnim }]}>
+      <TouchableOpacity style={styles.glassCard} onPress={onPress} activeOpacity={0.9}>
+        <View style={styles.imageContainer}>
           {imageUrl ? (
             <Image source={imageUrl} style={styles.productImage} resizeMode="cover" />
           ) : (
-            <LinearGradient
-              colors={["rgba(15,23,42,0.9)", "rgba(30,64,175,0.7)"]}
-              style={styles.productImageGradient}
-            >
-              <Text style={styles.productImageText}>📦</Text>
-            </LinearGradient>
+            <View style={styles.placeholderImage}>
+              <Text style={{ fontSize: 30 }}>📦</Text>
+            </View>
           )}
-
           {item.stock === 0 && (
-            <View style={styles.outOfStockBadge}>
-              <Text style={styles.outOfStockText}>Sin stock</Text>
+            <View style={styles.stockBadge}>
+              <Text style={styles.stockText}>Agotado</Text>
             </View>
           )}
         </View>
 
-        <View style={styles.productInfo}>
-          <Text style={styles.productTitle} numberOfLines={2}>
-            {item.titulo}
-          </Text>
-          <Text style={styles.productBrand} numberOfLines={1}>
-            {item.marca}
-          </Text>
-
-          <Text style={styles.productPrice}>${item.precio.toLocaleString()}</Text>
+        <View style={styles.cardContent}>
+          <Text style={styles.brandText} numberOfLines={1}>{item.marca}</Text>
+          <Text style={styles.titleText} numberOfLines={2}>{item.titulo}</Text>
+          <Text style={styles.priceText}>${item.precio.toLocaleString()}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
-/* BOTTOM NAV */
-
 const BottomNav = ({ navigation, activeRoute }) => {
   const navItems = [
     { name: "Home", icon: "🏠", label: "Inicio" },
-    { name: "Products", icon: "📱", label: "Productos" },
+    { name: "Products", icon: "📱", label: "Catálogo" },
     { name: "Cart", icon: "🛒", label: "Carrito" },
     { name: "Orders", icon: "📦", label: "Pedidos" },
-    { name: "Favorites", icon: "❤️", label: "Favoritos" },
-    { name: "Profile", icon: "👤", label: "Perfil" },
   ];
 
   return (
-    <View style={styles.bottomNav}>
-      {navItems.map((item) => (
-        <TouchableOpacity
-          key={item.name}
-          style={styles.navButton}
-          onPress={() => navigation.navigate(item.name)}
-        >
-          <Text
-            style={[
-              styles.navIcon,
-              activeRoute === item.name && styles.navIconActive,
-            ]}
-          >
-            {item.icon}
-          </Text>
-          <Text
-            style={[
-              styles.navText,
-              activeRoute === item.name && styles.navTextActive,
-            ]}
-          >
-            {item.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+    <View style={styles.navContainer}>
+        <View style={styles.glassNav}>
+        {navItems.map((item) => {
+            const isActive = activeRoute === item.name;
+            return (
+                <TouchableOpacity
+                key={item.name}
+                style={styles.navItem}
+                onPress={() => navigation.navigate(item.name)}
+                >
+                <Text style={[styles.navIcon, isActive && styles.navIconActive]}>
+                    {item.icon}
+                </Text>
+                {isActive && <View style={styles.activeDot} />}
+                </TouchableOpacity>
+            );
+        })}
+        </View>
     </View>
   );
 };
 
-/* STYLES */
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.darkBg,
+    backgroundColor: HERO.background,
   },
   centerContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: COLORS.darkBg,
+    backgroundColor: HERO.background,
+  },
+  ambientContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  glowOrb: {
+    position: 'absolute',
+    width: width * 1.2,
+    height: width * 1.2,
+    borderRadius: width,
+    opacity: 0.15, // Sutil
   },
 
-  /* HERO */
-  hero: {
-  paddingTop: 60,
-  paddingBottom: SPACING['2xl'],  // o SPACING.xl si prefieres menos alto
-  paddingHorizontal: SPACING.xl,
-  borderBottomLeftRadius: 32,
-  borderBottomRightRadius: 32,
-  borderBottomWidth: 1,
-  borderBottomColor: "rgba(148,163,184,0.35)",
+  heroContainer: {
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight + 20 : 60,
+    paddingHorizontal: 24,
+    marginBottom: 30,
   },
-  heroTopRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  iconCircle: {
+  pillBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: HERO.cardBorder,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#D8B4FE',
+  },
+  topIcons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
     width: 40,
     height: 40,
-    borderRadius: BORDER_RADIUS.full,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(15,23,42,0.75)",
+    borderRadius: 20,
+    backgroundColor: HERO.card,
     borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.5)",
+    borderColor: HERO.cardBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  iconText: {
-    color: COLORS.white,
-    fontSize: TYPOGRAPHY.lg,
-  },
+  iconText: { fontSize: 18 },
+  
   heroContent: {
-    marginTop: SPACING.lg,
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 30,
   },
-  heroEyebrow: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.purpleLight,
-    textTransform: "uppercase",
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
+  heroTextContainer: { flex: 1, paddingRight: 10 },
   heroTitle: {
-    fontSize: TYPOGRAPHY["2xl"],
-    fontWeight: TYPOGRAPHY.extrabold,
-    color: COLORS.white,
-    textAlign: "center",
-    lineHeight: 30,
-    marginBottom: SPACING.sm,
+    fontSize: 32,
+    fontWeight: '800',
+    color: HERO.text,
+    lineHeight: 38,
+    marginBottom: 8,
   },
+  heroTitleGradient: { color: '#C084FC' },
   heroSubtitle: {
-    fontSize: TYPOGRAPHY.sm,
-    color: COLORS.textMuted,
-    textAlign: "center",
-    marginBottom: SPACING.lg,
+    fontSize: 14,
+    color: HERO.textMuted,
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  heroCtaWrapper: {
+    alignSelf: 'flex-start',
+    shadowColor: HERO.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   heroButton: {
-    borderRadius: BORDER_RADIUS.full,
-    overflow: "hidden",
-    ...SHADOWS.purple,
-  },
-  heroButtonGradient: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 99,
   },
   heroButtonText: {
-    color: COLORS.white,
-    fontWeight: TYPOGRAPHY.bold,
-    fontSize: TYPOGRAPHY.sm,
-    marginRight: SPACING.xs,
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+    marginRight: 6,
   },
-  heroButtonArrow: {
-    color: COLORS.white,
-    fontSize: TYPOGRAPHY.lg,
+  heroButtonArrow: { color: 'white', fontSize: 16 },
+  
+  heroImageContainer: {
+    width: 120,
+    height: 120,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-  /* IMAGEN CIRCULAR */
-  heroImageWrapper: {
-    marginTop: SPACING.lg,
-  },
-  heroImageCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 9999,
-    backgroundColor: "rgba(15,23,42,0.9)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.5)",
-    overflow: "hidden",
+  imageGlow: {
+    position: 'absolute',
+    width: 100,
+    height: 100,
+    backgroundColor: HERO.primary,
+    borderRadius: 50,
+    opacity: 0.3,
+    filter: 'blur(20px)',
   },
   heroImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 9999,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
 
-  /* CARD STATS FUERA DEL HERO */
-  heroStatsWrapper: {
-    marginTop: SPACING.lg, 
-    alignItems: 'center',
-    marginBottom: SPACING.lg, 
-  },
-  heroStatsCard: {
-    width: width * 0.9,                
-    borderRadius: BORDER_RADIUS["2xl"],
-    backgroundColor: "rgba(15,23,42,0.98)",
+  glassStatsBar: {
+    flexDirection: 'row',
+    backgroundColor: HERO.card,
+    borderRadius: 16,
+    paddingVertical: 16,
     borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.45)",
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+    borderColor: HERO.cardBorder,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
   },
-  statItem: {
-    flex: 1,
-    alignItems: "center",
-  },
+  statItem: { alignItems: 'center' },
   statNumber: {
-    fontSize: TYPOGRAPHY.lg,
-    fontWeight: TYPOGRAPHY.extrabold,
-    color: COLORS.white,
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: HERO.text,
   },
   statLabel: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    textTransform: "uppercase",
-    marginTop: 4,
+    fontSize: 11,
+    color: HERO.textMuted,
+    textTransform: 'uppercase',
+    marginTop: 2,
+    fontWeight: '600',
   },
-  statDivider: {
+  divider: {
     width: 1,
-    height: 28,
-    backgroundColor: "rgba(148,163,184,0.4)",
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
 
-  /* SECTION HEADER + GRID */
   sectionHeader: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  paddingHorizontal: SPACING.lg,
-  marginTop: 0,            
-  marginBottom: SPACING.md,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    paddingHorizontal: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: TYPOGRAPHY.xl,
-    fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.white,
+    fontSize: 24,
+    fontWeight: '700',
+    color: HERO.text,
   },
   sectionSubtitle: {
-    fontSize: TYPOGRAPHY.xs,
-    color: COLORS.textMuted,
-    marginTop: 2,
+    fontSize: 13,
+    color: HERO.textMuted,
   },
   seeAllText: {
-    fontSize: TYPOGRAPHY.sm,
-    color: COLORS.purpleLight,
-    fontWeight: TYPOGRAPHY.medium,
+    fontSize: 14,
+    color: '#D8B4FE',
+    fontWeight: '600',
   },
   productList: {
-    paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.sm,
-    paddingBottom: 110,
+    paddingHorizontal: 24,
+    paddingBottom: 100,
   },
   row: {
     justifyContent: "space-between",
-    marginBottom: SPACING.xl,
+    marginBottom: 20,
   },
-  productCardWrapper: {
-    width: CARD_WIDTH,
-  },
-  productCard: {
-    backgroundColor: "rgba(15,23,42,0.95)",
-    borderRadius: BORDER_RADIUS.xl,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "rgba(148,163,184,0.4)",
-  },
-  productImageContainer: {
-    height: CARD_WIDTH,
-    overflow: "hidden",
-    position: "relative",
-    backgroundColor: "rgba(15,23,42,0.9)",
-  },
-  productImage: {
-    width: "100%",
-    height: "100%",
-  },
-  productImageGradient: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  productImageText: {
-    fontSize: 40,
-  },
-  outOfStockBadge: {
-    position: "absolute",
-    top: 8,
-    left: 8,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  outOfStockText: {
-    color: COLORS.white,
-    fontSize: 10,
-    fontWeight: "bold",
-  },
-  productInfo: {
-    padding: SPACING.md,
-  },
-  productTitle: {
-    fontSize: TYPOGRAPHY.sm,
-    fontWeight: "bold",
-    color: COLORS.white,
-    marginBottom: 4,
-    minHeight: 36,
-  },
-  productBrand: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-    marginBottom: 8,
-  },
-  productPrice: {
-    fontSize: TYPOGRAPHY.base,
-    fontWeight: "bold",
-    color: COLORS.white,
-  },
-
   emptyContainer: {
-    padding: SPACING["4xl"],
+    padding: 40,
     alignItems: "center",
   },
   emptyText: {
-    fontSize: TYPOGRAPHY.base,
-    color: COLORS.textMuted,
+    color: HERO.textMuted,
   },
 
-  /* BOTTOM NAV */
-  bottomNav: {
-    flexDirection: "row",
-    backgroundColor: "rgba(15, 15, 30, 0.95)",
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.1)",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingBottom: 5,
+  cardWrapper: {
+    width: CARD_WIDTH,
   },
-  navButton: {
-    flex: 1,
-    padding: 10,
-    alignItems: "center",
+  glassCard: {
+    backgroundColor: 'rgba(39, 39, 42, 0.3)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: HERO.cardBorder,
+    overflow: 'hidden',
+  },
+  imageContainer: {
+    height: CARD_WIDTH,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  productImage: { width: '100%', height: '100%' },
+  placeholderImage: { alignItems: 'center', justifyContent: 'center' },
+  stockBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  stockText: { color: 'white', fontSize: 10, fontWeight: 'bold' },
+  cardContent: { padding: 12 },
+  brandText: {
+    fontSize: 10,
+    color: HERO.textMuted,
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  titleText: {
+    fontSize: 13,
+    color: HERO.text,
+    fontWeight: '600',
+    marginBottom: 8,
+    height: 36,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: HERO.text,
+  },
+
+  navContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
+  },
+  glassNav: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(24, 24, 27, 0.85)', // Zinc-900 casi opaco
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: 'black',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 10,
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  navItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 50,
   },
   navIcon: {
-    fontSize: 20,
-    marginBottom: 2,
+    fontSize: 22,
     opacity: 0.5,
   },
   navIconActive: {
-    fontSize: 20,
-    marginBottom: 2,
     opacity: 1,
+    transform: [{ scale: 1.1 }],
   },
-  navText: {
-    fontSize: 10,
-    color: COLORS.textMuted,
-  },
-  navTextActive: {
-    fontSize: 10,
-    color: COLORS.purpleLight,
-    fontWeight: "bold",
+  activeDot: {
+    width: 4,
+    height: 4,
+    backgroundColor: HERO.primary,
+    borderRadius: 2,
+    marginTop: 4,
   },
 });
