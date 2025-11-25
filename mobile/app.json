@@ -8,6 +8,12 @@
     "userInterfaceStyle": "light",
     "scheme": "miniamazon",
     "platforms": ["ios", "android", "web"],
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#232F3E"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.miniamazon.mobile",
@@ -19,6 +25,7 @@
       "package": "com.miniamazon.mobile",
       "versionCode": 1,
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#232F3E"
       },
       "permissions": ["INTERNET"],
