@@ -32,11 +32,23 @@ function Navigation() {
     }
   }, [loading]);
 
+
+
   useEffect(() => {
     if (!loading) {
       onLayoutRootView();
     }
   }, [loading, onLayoutRootView]);
+
+  // Safety timeout: Force hide splash screen after 4 seconds
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      console.log("Force hiding splash screen due to timeout");
+      await SplashScreen.hideAsync();
+    }, 4000);
+
+    return () => clearTimeout(timeout);
+  }, []);
 
   if (loading) {
     return (
