@@ -13,7 +13,6 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "../contexts/AuthContext";
-// Mantengo tus imports
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from "../constants/theme";
 
 const { width, height } = Dimensions.get('window');

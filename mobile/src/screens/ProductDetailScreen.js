@@ -16,8 +16,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useCart } from '../contexts/CartContext';
 import { productsAPI } from '../services/api';
 import { getImage } from '../public/images';
-
-// Mantengo tus imports, pero usaremos el tema HERO para el estilo visual
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from '../constants/theme';
 
 const { width, height } = Dimensions.get('window');

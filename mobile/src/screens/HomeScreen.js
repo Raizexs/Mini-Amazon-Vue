@@ -22,7 +22,7 @@ const { width, height } = Dimensions.get("window");
 const GAP = 15; 
 const PADDING_HORIZONTAL = 48;
 const CARD_WIDTH = (width - PADDING_HORIZONTAL - GAP) / 2;
-const heroImage = require("../../assets/hero-image.png");
+const heroImage = require("../../assets/heroimage.jpg");
 
 const HERO = {
   background: '#09090b', // Zinc-950

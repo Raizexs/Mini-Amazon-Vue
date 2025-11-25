@@ -14,7 +14,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { ordersAPI } from "../services/api";
-// Mantenemos tus imports, pero usaremos el tema HERO para el estilo visual
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from "../constants/theme";
 
 const { width, height } = Dimensions.get('window');
