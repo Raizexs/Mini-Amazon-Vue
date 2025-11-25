@@ -1,10 +1,14 @@
-import React from "react";
+import React, { useEffect, useCallback } from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AuthProvider, useAuth } from "./src/contexts/AuthContext";
 import { CartProvider } from "./src/contexts/CartContext";
 import { FavoritesProvider } from "./src/contexts/FavoritesContext";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
+import * as SplashScreen from 'expo-splash-screen';
+
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
 
 // Screens
 import LoginScreen from "./src/screens/LoginScreen";
@@ -21,6 +25,18 @@ const Stack = createNativeStackNavigator();
 
 function Navigation() {
   const { user, loading } = useAuth();
+
+  const onLayoutRootView = useCallback(async () => {
+    if (!loading) {
+      await SplashScreen.hideAsync();
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    if (!loading) {
+      onLayoutRootView();
+    }
+  }, [loading, onLayoutRootView]);
 
   if (loading) {
     return (
