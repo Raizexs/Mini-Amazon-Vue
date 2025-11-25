@@ -30,6 +30,10 @@ export const AuthProvider = ({ children }) => {
       "522400273734-rifo0o74n42e8iv787p6m3fh251jv7et.apps.googleusercontent.com",
     androidClientId:
       "522400273734-r4479huf7gti2anj45mi95libngeouo3.apps.googleusercontent.com",
+    redirectUri: AuthSession.makeRedirectUri({
+      scheme: 'miniamazon',
+      path: 'redirect'
+    }),
   });
 
   useEffect(() => {
