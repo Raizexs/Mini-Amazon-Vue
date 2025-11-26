@@ -6,7 +6,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "scheme": "miniamazon",
+    "scheme": "com.miniamazon.mobile",
     "platforms": ["ios", "android", "web"],
     "icon": "./assets/icon.png",
     "splash": {
@@ -34,6 +34,9 @@
       "permissions": ["INTERNET"],
       "googleServicesFile": "./google-services.json"
     },
+    "plugins": [
+      "@react-native-google-signin/google-signin"
+    ],
     "extra": {
       "eas": {
         "projectId": "e4c1483f-efe3-4ad7-ac95-0304d56d8036"
