@@ -42,7 +42,15 @@ api.interceptors.response.use(
 
 // ============ Authentication ============
 export const authAPI = {
-  // Login with Firebase token
+  // Login with Google using Firebase token
+  googleLogin: async ({ idToken }) => {
+    const response = await api.post("/api/auth/firebase-login", {
+      firebase_token: idToken,
+    });
+    return response.data;
+  },
+
+  // Login with Firebase token (alias for compatibility)
   loginWithFirebase: async (firebaseToken) => {
     const response = await api.post("/api/auth/firebase-login", {
       firebase_token: firebaseToken,

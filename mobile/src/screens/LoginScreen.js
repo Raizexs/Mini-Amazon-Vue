@@ -152,6 +152,24 @@ export default function LoginScreen() {
         </View>
 
       </Animated.View>
+
+      {/* LOADING OVERLAY: Animación premium cuando está autenticando */}
+      {loading && (
+        <Animated.View 
+          style={[
+            styles.loadingOverlay,
+            { 
+              opacity: fadeAnim,
+            }
+          ]}
+        >
+          <View style={styles.loadingCard}>
+            <ActivityIndicator size="large" color="#9333EA" />
+            <Text style={styles.loadingText}>Autenticando...</Text>
+            <Text style={styles.loadingSubtext}>Conectando con Google</Text>
+          </View>
+        </Animated.View>
+      )}
     </View>
   );
 }
@@ -307,5 +325,34 @@ const styles = StyleSheet.create({
   link: {
     color: '#A1A1AA',
     fontWeight: '600',
+  },
+
+  // --- Loading Overlay ---
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(9, 9, 11, 0.95)', // Fondo oscuro semi-transparente
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  loadingCard: {
+    backgroundColor: HERO.surface,
+    borderRadius: HERO.radius,
+    borderWidth: 1,
+    borderColor: HERO.border,
+    padding: 32,
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    color: HERO.text,
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 8,
+  },
+  loadingSubtext: {
+    color: HERO.textMuted,
+    fontSize: 14,
+    fontWeight: '500',
   },
 });

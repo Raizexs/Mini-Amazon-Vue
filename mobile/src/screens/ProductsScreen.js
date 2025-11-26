@@ -63,7 +63,6 @@ export default function ProductsScreen({ navigation }) {
       setProducts(productsData || []);
       setCategories(categoriesData || []);
     } catch (error) {
-      console.error("Error loading data:", error);
       setProducts([]);
       setCategories([]);
     } finally {
@@ -81,7 +80,6 @@ export default function ProductsScreen({ navigation }) {
       const results = await productsAPI.searchProducts(searchQuery);
       setProducts(results);
     } catch (error) {
-      console.error("Error searching products:", error);
     } finally {
       setLoading(false);
     }
@@ -96,7 +94,6 @@ export default function ProductsScreen({ navigation }) {
       const results = await productsAPI.getProducts(params);
       setProducts(results);
     } catch (error) {
-      console.error("Error filtering products:", error);
     } finally {
       setLoading(false);
     }

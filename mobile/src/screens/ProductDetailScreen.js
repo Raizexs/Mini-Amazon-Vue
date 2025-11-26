@@ -55,7 +55,6 @@ export default function ProductDetailScreen({ route, navigation }) {
       const data = await productsAPI.getProductById(productId);
       setProduct(data);
     } catch (error) {
-      console.error("Error loading product:", error);
       alert("Error al cargar el producto");
       navigation.goBack();
     } finally {

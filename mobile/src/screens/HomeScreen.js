@@ -56,7 +56,6 @@ export default function HomeScreen({ navigation }) {
       const products = await productsAPI.getFeaturedProducts();
       setFeaturedProducts((products || []).slice(0, 4));
     } catch (error) {
-      console.error("Error loading featured products:", error);
     } finally {
       setLoading(false);
     }

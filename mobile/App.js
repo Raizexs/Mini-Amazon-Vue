@@ -4,10 +4,10 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { AuthProvider, useAuth } from "./src/contexts/AuthContext";
 import { CartProvider } from "./src/contexts/CartContext";
 import { FavoritesProvider } from "./src/contexts/FavoritesContext";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native"; // Quitamos ActivityIndicator si mantenemos el Splash
 import * as SplashScreen from 'expo-splash-screen';
 
-// Keep the splash screen visible while we fetch resources
+// Mantenemos el Splash visible al inicio
 SplashScreen.preventAutoHideAsync();
 
 // Screens
@@ -26,67 +26,81 @@ const Stack = createNativeStackNavigator();
 function Navigation() {
   const { user, loading } = useAuth();
 
+  // Esta función se ejecutará SOLO cuando la vista principal se haya renderizado
   const onLayoutRootView = useCallback(async () => {
     if (!loading) {
+      // Solo ocultamos el splash cuando la carga terminó Y el componente se montó
       await SplashScreen.hideAsync();
     }
   }, [loading]);
 
-
-
-  useEffect(() => {
-    if (!loading) {
-      onLayoutRootView();
-    }
-  }, [loading, onLayoutRootView]);
-
-  // Safety timeout: Force hide splash screen after 4 seconds
+  // Timeout de seguridad (Excelente idea mantenerlo por si la API falla)
   useEffect(() => {
     const timeout = setTimeout(async () => {
-      console.log("Force hiding splash screen due to timeout");
-      await SplashScreen.hideAsync();
+      // Solo intentamos ocultar si sigue visible, para evitar errores en consola
+      try {
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        // Ya estaba oculto, no pasa nada
+      }
     }, 4000);
 
     return () => clearTimeout(timeout);
   }, []);
 
+  // Mientras está cargando, mostramos el fondo oscuro (NO blanco)
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FF9900" />
-      </View>
+      <View style={{ flex: 1, backgroundColor: '#09090b' }} onLayout={onLayoutRootView} />
     );
   }
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerShown: false,
-          animation: "slide_from_right",
+    // AQUI es donde conectamos el onLayout.
+    // Cuando este View se termine de "pintar", se dispara la función y se va el Splash.
+    <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <NavigationContainer
+        theme={{
+          dark: true,
+          colors: {
+            primary: '#9333EA',
+            background: '#09090b',
+            card: '#09090b',
+            text: '#FAFAFA',
+            border: 'rgba(255, 255, 255, 0.08)',
+            notification: '#9333EA',
+          },
         }}
       >
-        {!user ? (
-          // Not authenticated
-          <Stack.Screen name="Login" component={LoginScreen} />
-        ) : (
-          // Authenticated
-          <>
-            <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Products" component={ProductsScreen} />
-            <Stack.Screen
-              name="ProductDetail"
-              component={ProductDetailScreen}
-            />
-            <Stack.Screen name="Cart" component={CartScreen} />
-            <Stack.Screen name="Checkout" component={CheckoutScreen} />
-            <Stack.Screen name="Orders" component={OrdersScreen} />
-            <Stack.Screen name="Favorites" component={FavoritesScreen} />
-            <Stack.Screen name="Profile" component={ProfileScreen} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: "slide_from_right",
+            animationDuration: 200,
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+            contentStyle: { backgroundColor: '#09090b' },
+          }}
+        >
+          {!user ? (
+            // Flujo No Autenticado
+            <Stack.Screen name="Login" component={LoginScreen} />
+          ) : (
+            // Flujo Autenticado
+            <>
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="Products" component={ProductsScreen} />
+              <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+              <Stack.Screen name="Cart" component={CartScreen} />
+              <Stack.Screen name="Checkout" component={CheckoutScreen} />
+              <Stack.Screen name="Orders" component={OrdersScreen} />
+              <Stack.Screen name="Favorites" component={FavoritesScreen} />
+              <Stack.Screen name="Profile" component={ProfileScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
 
@@ -101,12 +115,3 @@ export default function App() {
     </AuthProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-});
