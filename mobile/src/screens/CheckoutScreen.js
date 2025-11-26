@@ -119,7 +119,11 @@ export default function CheckoutScreen({ navigation }) {
     try {
       const orderData = {
         items: cart.map(item => ({
-          id: item.id, quantity: item.quantity, price: item.precio, title: item.titulo,
+          id: item.id, 
+          quantity: item.quantity, 
+          price: item.precio, 
+          title: item.titulo,
+          image: item.imagenes && item.imagenes.length > 0 ? item.imagenes[0] : null
         })),
         shipping_address: formData.address,
         total,
@@ -136,8 +140,9 @@ export default function CheckoutScreen({ navigation }) {
         { text: 'Ver mis pedidos', onPress: () => navigation.replace('Orders') }
       ]);
     } catch (error) {
-      console.error('Checkout error:', error);
-      Alert.alert('Error', 'Hubo un problema al procesar tu pedido.');
+      console.error("Order Error:", error);
+      const errorMessage = error.response?.data?.detail || error.message || "Hubo un problema al procesar tu pedido.";
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
