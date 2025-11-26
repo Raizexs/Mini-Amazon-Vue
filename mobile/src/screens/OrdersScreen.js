@@ -9,11 +9,13 @@ import {
   RefreshControl,
   StatusBar,
   Dimensions,
-  Platform
+  Platform,
+  Image
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "@react-navigation/native";
 import { ordersAPI } from "../services/api";
+import { getImage } from "../public/images";
 import { COLORS, TYPOGRAPHY, SPACING, SHADOWS } from "../constants/theme";
 
 const { width, height } = Dimensions.get('window');
@@ -38,6 +40,7 @@ export default function OrdersScreen({ navigation }) {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   const loadOrders = async () => {
     try {
@@ -45,7 +48,7 @@ export default function OrdersScreen({ navigation }) {
       const ordersData = await ordersAPI.getUserOrders();
       setOrders(Array.isArray(ordersData) ? ordersData : []);
     } catch (error) {
-      console.error("Error loading orders:", error);
+      // Error silencioso
     } finally {
       setLoading(false);
     }
@@ -92,11 +95,12 @@ export default function OrdersScreen({ navigation }) {
   /* ====== CARD DE PEDIDO (Hero UI) ====== */
   const renderOrder = ({ item }) => {
     const statusColor = getStatusColor(item.status);
+    const isExpanded = expandedOrderId === item.id;
 
     return (
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => navigation.navigate("OrderDetail", { orderId: item.id })}
+        onPress={() => setExpandedOrderId(isExpanded ? null : item.id)}
         style={styles.cardWrapper}
       >
         <View style={styles.glassCard}>
@@ -138,6 +142,73 @@ export default function OrdersScreen({ navigation }) {
                    {item.shipping_address}
                 </Text>
              </View>
+          )}
+
+          {/* Expanded Details */}
+          {isExpanded && (
+            <View style={styles.expandedSection}>
+              <View style={styles.divider} />
+              <Text style={styles.expandedTitle}>Detalles del Pedido</Text>
+              
+              {/* Items List */}
+              {item.items.map((orderItem, index) => {
+                // Intentar obtener datos directamente o anidados en 'product' (Soporte para español/inglés)
+                const title = orderItem.title || orderItem.titulo || orderItem.product?.title || orderItem.product?.titulo || "Producto sin nombre";
+                
+                // Lógica robusta para obtener la imagen (puede ser string o array, en raíz o en product)
+                let imageKey = orderItem.image || orderItem.imagen;
+                if (!imageKey && orderItem.imagenes && orderItem.imagenes.length > 0) imageKey = orderItem.imagenes[0];
+                
+                if (!imageKey) {
+                   const prod = orderItem.product;
+                   if (prod) {
+                      imageKey = prod.image || prod.imagen;
+                      if (!imageKey && prod.imagenes && prod.imagenes.length > 0) imageKey = prod.imagenes[0];
+                   }
+                }
+
+                const imageSource = getImage(imageKey);
+
+                return (
+                  <View key={index} style={styles.itemRow}>
+                    {imageSource ? (
+                      <Image 
+                        source={imageSource} 
+                        style={styles.itemImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[styles.itemImage, { justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text style={{fontSize: 20}}>📦</Text>
+                      </View>
+                    )}
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>{title}</Text>
+                      <Text style={styles.itemQty}>Cantidad: {orderItem.quantity}</Text>
+                    </View>
+                    <Text style={styles.itemPrice}>${(orderItem.price * orderItem.quantity).toLocaleString()}</Text>
+                  </View>
+                );
+              })}
+
+              {/* Payment & Shipping Info */}
+              <View style={styles.divider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Método de pago:</Text>
+                <Text style={styles.infoValue}>
+                  {['card', 'credit_card', 'tarjeta'].includes(item.payment_method?.toLowerCase()) ? 'Tarjeta' : 'Transferencia'}
+                </Text>
+              </View>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Método de envío:</Text>
+                <Text style={styles.infoValue}>{item.shipping_method === 'domicilio' ? 'Despacho a domicilio' : 'Retiro en tienda'}</Text>
+              </View>
+              
+              {/* Collapse Indicator */}
+              <View style={styles.collapseIndicator}>
+                <Text style={styles.collapseText}>Toca para cerrar ▲</Text>
+              </View>
+            </View>
           )}
         </View>
       </TouchableOpacity>
@@ -342,25 +413,25 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  /* --- LIST --- */
-  listContent: {
-    paddingBottom: 120, // Space for Dock
-  },
+  /* --- CARD --- */
   cardWrapper: {
-    paddingHorizontal: 24,
     marginBottom: 16,
+    marginHorizontal: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
   glassCard: {
-    backgroundColor: 'rgba(39, 39, 42, 0.3)',
+    backgroundColor: HERO.glass,
     borderRadius: HERO.radius,
-    padding: 16,
     borderWidth: 1, borderColor: HERO.glassBorder,
+    padding: 16,
+    overflow: 'hidden',
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
   },
   orderId: { color: HERO.text, fontSize: 16, fontWeight: '700' },
   orderDate: { color: HERO.textMuted, fontSize: 12, marginTop: 2 },
@@ -368,61 +439,102 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 8, paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
+    borderRadius: 12, borderWidth: 1,
   },
   statusDot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
-  statusText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  statusText: { fontSize: 10, fontWeight: '700', textTransform: 'uppercase' },
 
   divider: { height: 1, backgroundColor: HERO.glassBorder, marginVertical: 12 },
 
-  cardBody: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  label: { color: HERO.textMuted, fontSize: 11, textTransform: 'uppercase', marginBottom: 2 },
-  value: { color: HERO.text, fontSize: 14 },
-  totalValue: { color: '#D8B4FE', fontSize: 16, fontWeight: '700' },
+  cardBody: { flexDirection: 'row', justifyContent: 'space-between' },
+  label: { color: HERO.textMuted, fontSize: 10, textTransform: 'uppercase', letterSpacing: 1 },
+  value: { color: HERO.text, fontSize: 14, marginTop: 4 },
+  totalValue: { color: '#D8B4FE', fontSize: 18, fontWeight: '700', marginTop: 2 },
 
   addressContainer: {
+    marginTop: 12,
     flexDirection: 'row', alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.2)',
     padding: 8, borderRadius: 8,
-    gap: 6,
   },
-  addressText: { color: HERO.textMuted, fontSize: 12, flex: 1 },
+  addressText: { color: HERO.textMuted, fontSize: 12, marginLeft: 8, flex: 1 },
+
+  /* --- EXPANDED SECTION --- */
+  expandedSection: {
+    marginTop: 4,
+  },
+  expandedTitle: {
+    color: HERO.text, fontSize: 14, fontWeight: '700', marginBottom: 12,
+  },
+  itemRow: {
+    flexDirection: 'row', alignItems: 'center',
+    marginBottom: 12,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: 8, borderRadius: 12,
+  },
+  itemImage: {
+    width: 48, height: 48, borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginRight: 12,
+  },
+  itemInfo: { flex: 1 },
+  itemTitle: { color: HERO.text, fontSize: 14, marginBottom: 2 },
+  itemQty: { color: HERO.textMuted, fontSize: 12 },
+  itemPrice: { color: HERO.text, fontWeight: '600' },
+
+  infoRow: {
+    flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8,
+  },
+  infoLabel: { color: HERO.textMuted, fontSize: 14 },
+  infoValue: { color: HERO.text, fontSize: 14 },
+
+  collapseIndicator: {
+    alignItems: 'center', marginTop: 12,
+  },
+  collapseText: { color: HERO.primary, fontSize: 12, fontWeight: '600' },
 
   /* --- EMPTY STATE --- */
-  emptyContainer: { alignItems: 'center', marginTop: 40, paddingHorizontal: 40 },
+  emptyContainer: { alignItems: 'center', marginTop: 60, paddingHorizontal: 40 },
   emptyCircle: {
     width: 80, height: 80, borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.03)',
+    backgroundColor: 'rgba(255,255,255,0.05)',
     justifyContent: 'center', alignItems: 'center',
-    marginBottom: 16, borderWidth: 1, borderColor: HERO.glassBorder
+    marginBottom: 16,
   },
-  emptyTitle: { color: HERO.text, fontSize: 18, fontWeight: '700', marginBottom: 8 },
+  emptyTitle: { color: HERO.text, fontSize: 20, fontWeight: '700', marginBottom: 8 },
   emptyText: { color: HERO.textMuted, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
-  shopBtn: { width: '100%', height: 48, borderRadius: HERO.radius, overflow: 'hidden' },
+  shopBtn: {
+    width: '100%', height: 48, borderRadius: 12, overflow: 'hidden',
+  },
   btnGradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  btnText: { color: 'white', fontWeight: '700' },
+  btnText: { color: 'white', fontWeight: '700', fontSize: 16 },
 
   /* --- DOCK --- */
   dockContainer: {
-    position: 'absolute', bottom: 20, left: 0, right: 0,
+    position: 'absolute', bottom: 30, left: 0, right: 0,
     alignItems: 'center',
   },
   glassDock: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(24, 24, 27, 0.85)',
+    backgroundColor: 'rgba(20, 20, 25, 0.85)',
     borderRadius: 24,
-    paddingHorizontal: 24, paddingVertical: 12,
+    paddingHorizontal: 20, paddingVertical: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 5,
-    gap: 32
+    shadowColor: '#000', shadowOffset: {width: 0, height: 10}, shadowOpacity: 0.4, shadowRadius: 20,
+    elevation: 10,
   },
-  dockItem: { alignItems: 'center', justifyContent: 'center' },
+  dockItem: {
+    paddingHorizontal: 16, paddingVertical: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
   dockIcon: { fontSize: 22, opacity: 0.5 },
-  dockIconActive: { opacity: 1, transform: [{ scale: 1.1 }] },
-  dockDot: { width: 4, height: 4, backgroundColor: HERO.primary, borderRadius: 2, position: 'absolute', bottom: -6 }
+  dockIconActive: { opacity: 1, transform: [{scale: 1.1}] },
+  dockDot: {
+    width: 4, height: 4, borderRadius: 2,
+    backgroundColor: HERO.primary,
+    marginTop: 4,
+  },
+  listContent: {
+    paddingBottom: 120,
+  },
 });
