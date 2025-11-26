@@ -17,6 +17,7 @@ firebase-credentials.json
 firebase-*.json
 serviceAccountKey.json
 GoogleService-Info.plist
+google-services.json
 
 # Keystores y certificados
 *.jks
