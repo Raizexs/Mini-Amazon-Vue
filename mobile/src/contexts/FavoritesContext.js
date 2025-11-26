@@ -24,7 +24,6 @@ export const FavoritesProvider = ({ children }) => {
       const data = await favoritesAPI.getFavorites();
       setFavorites(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Error loading favorites:", error);
     } finally {
       setLoading(false);
     }
@@ -45,7 +44,6 @@ export const FavoritesProvider = ({ children }) => {
       try {
         await favoritesAPI.removeFavorite(product.id);
       } catch (error) {
-        console.error("Error removing favorite:", error);
         // Revert on error
         setFavorites(prev => [...prev, favItem]);
       }
@@ -68,7 +66,6 @@ export const FavoritesProvider = ({ children }) => {
         // Replace temp item with real one from server
         setFavorites(prev => prev.map(f => f.id === tempId ? response : f));
       } catch (error) {
-        console.error("Error adding favorite:", error);
         // Revert on error
         setFavorites(prev => prev.filter(f => f.id !== tempId));
       }

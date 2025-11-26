@@ -24,7 +24,6 @@ export const CartProvider = ({ children }) => {
         setCart(JSON.parse(jsonValue));
       }
     } catch (e) {
-      console.error("Error loading cart", e);
     } finally {
       setLoading(false);
     }
@@ -35,7 +34,6 @@ export const CartProvider = ({ children }) => {
       const jsonValue = JSON.stringify(cart);
       await AsyncStorage.setItem('@mini_amazon_cart', jsonValue);
     } catch (e) {
-      console.error("Error saving cart", e);
     }
   };
 
@@ -71,7 +69,6 @@ export const CartProvider = ({ children }) => {
     try {
       await AsyncStorage.removeItem('@mini_amazon_cart');
     } catch (e) {
-      console.error("Error clearing cart", e);
     }
   };
 
